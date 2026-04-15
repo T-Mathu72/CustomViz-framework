@@ -6,7 +6,7 @@
 // ============================================================
 
 const SUPABASE_URL  = 'https://fcgdefombxdwpeqmqsaa.supabase.co';   // ex: https://xxxx.supabase.co
-const SUPABASE_KEY  = 'sb_publishable_5Fa_3FTu2lt2fq0bQ10soA_BFKcdYL3';        // clé publique anon
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjZ2RlZm9tYnhkd3BlcW1xc2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjM5MzAsImV4cCI6MjA5MTgzOTkzMH0.GTl7hmYRH0wh7f5Hwsn5zjNOZ6Mn8ZHlLLY8hxd7Gfw';        // clé publique anon
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
