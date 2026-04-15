@@ -275,6 +275,138 @@ const SVG_GENERATORS = {
       return `<svg width="90" height="18" viewBox="0 0 90 18" xmlns="http://www.w3.org/2000/svg">${circles}</svg>`;
     }
   },
+
+  'Flèche de Tendance': {
+    params: [
+      { id: 'val', label: 'Variation (%)', type: 'range', min: -0.5, max: 0.5, step: 0.01, default: 0.12, fmt: v => (v>0?'+':'')+Math.round(v*100)+'%' },
+    ],
+    render: p => {
+      const c = p.val > 0.01 ? '#22C55E' : p.val < -0.01 ? '#EF4444' : '#9CA3AF';
+      const path = p.val > 0.01 ? 'M12 19V5M5 12l7-7 7 7' : p.val < -0.01 ? 'M12 5v14M5 12l7 7 7-7' : 'M5 12h14';
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="${c}" opacity="0.15"/><path d="${path}" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+    }
+  },
+
+  'Delta vs Période': {
+    params: [
+      { id: 'delta', label: 'Variation (%)', type: 'range', min: -0.5, max: 0.5, step: 0.01, default: 0.124, fmt: v => (v>=0?'+':'')+Math.round(v*1000)/10+'%' },
+    ],
+    render: p => {
+      const c = p.delta >= 0 ? '#22C55E' : '#EF4444';
+      const bg = p.delta >= 0 ? '#DCFCE7' : '#FEE2E2';
+      const txt = (p.delta >= 0 ? '+' : '') + Math.round(p.delta*1000)/10 + '%';
+      return `<svg width="80" height="26" viewBox="0 0 80 26" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="26" rx="6" fill="${bg}"/><text x="40" y="17" text-anchor="middle" font-family="Arial" font-size="10" font-weight="700" fill="${c}">${txt}</text></svg>`;
+    }
+  },
+
+  'Barre Empilée 2 Segments': {
+    params: [
+      { id: 'a', label: 'Réalisé',   type: 'number', min: 0, default: 130 },
+      { id: 'b', label: 'Restant',   type: 'number', min: 0, default: 70 },
+      { id: 'ca', label: 'Couleur A', type: 'color', default: '#6366F1' },
+      { id: 'cb', label: 'Couleur B', type: 'color', default: '#A5B4FC' },
+    ],
+    render: p => {
+      const total = (p.a + p.b) || 1;
+      const lA = Math.round((p.a / total) * 200);
+      const lB = 200 - lA;
+      return `<svg width="210" height="20" viewBox="0 0 210 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4" width="200" height="12" rx="6" fill="#E5E7EB"/><rect x="5" y="4" width="${lA}" height="12" rx="6" fill="${p.ca}"/><rect x="${5+lA}" y="4" width="${lB}" height="12" fill="${p.cb}"/></svg>`;
+    }
+  },
+
+  'Score sur 10': {
+    params: [
+      { id: 'score', label: 'Score', type: 'range', min: 0, max: 10, step: 0.1, default: 8.4, fmt: v => v.toFixed(1) },
+    ],
+    render: p => {
+      const c = p.score >= 8 ? '#22C55E' : p.score >= 5 ? '#F59E0B' : '#EF4444';
+      return `<svg width="52" height="28" viewBox="0 0 52 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="52" height="28" rx="6" fill="${c}"/><text x="26" y="19" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="white">${p.score.toFixed(1)}</text></svg>`;
+    }
+  },
+
+  'Pastille Statut': {
+    params: [
+      { id: 'statut', label: 'Statut (0=Retard 0.5=Cours 1=Terminé)', type: 'range', min: 0, max: 1, step: 0.5, default: 0.5, fmt: v => v===0?'EN RETARD':v===1?'TERMINÉ':'EN COURS' },
+    ],
+    render: p => {
+      const labels = { 0: 'EN RETARD', 0.5: 'EN COURS', 1: 'TERMINÉ' };
+      const colors = { 0: '#EF4444', 0.5: '#3B82F6', 1: '#22C55E' };
+      const bgs    = { 0: '#FEE2E2', 0.5: '#DBEAFE', 1: '#DCFCE7' };
+      const key = p.statut === 0 ? 0 : p.statut >= 1 ? 1 : 0.5;
+      return `<svg width="76" height="22" viewBox="0 0 76 22" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="76" height="22" rx="11" fill="${bgs[key]}"/><circle cx="11" cy="11" r="4" fill="${colors[key]}"/><text x="20" y="15" font-family="Arial" font-size="8" font-weight="700" fill="${colors[key]}">${labels[key]}</text></svg>`;
+    }
+  },
+
+  'Jauge Semi-Circulaire': {
+    params: [
+      { id: 'val', label: 'Atteinte', type: 'range', min: 0, max: 1, step: 0.01, default: 0.75, fmt: v => Math.round(v*100)+'%' },
+      { id: 'color', label: 'Couleur arc', type: 'color', default: '#6366F1' },
+    ],
+    render: p => {
+      const arc = 113.1;
+      const offset = (1 - Math.min(Math.max(p.val, 0), 1)) * arc;
+      return `<svg width="90" height="52" viewBox="0 0 90 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 45 A36 36 0 0 1 81 45" stroke="#E5E7EB" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M9 45 A36 36 0 0 1 81 45" stroke="${p.color}" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="${arc}" stroke-dashoffset="${offset.toFixed(1)}"/><text x="45" y="48" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#374151">${Math.round(p.val*100)}%</text></svg>`;
+    }
+  },
+
+  'Indicateur Delta Valeur': {
+    params: [
+      { id: 'delta', label: 'Delta (k€)', type: 'number', default: 23.5 },
+    ],
+    render: p => {
+      const c = p.delta >= 0 ? '#22C55E' : '#EF4444';
+      const arrow = p.delta >= 0 ? '▲' : '▼';
+      const txt = `${arrow} ${p.delta >= 0 ? '+' : ''}${Number(p.delta).toFixed(1)}k`;
+      return `<svg width="72" height="22" viewBox="0 0 72 22" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="4" y="15" font-family="Arial" font-size="11" font-weight="700" fill="${c}">${txt}</text></svg>`;
+    }
+  },
+
+  'Barre de Chaleur': {
+    params: [
+      { id: 'ratio', label: 'Intensité', type: 'range', min: 0, max: 1, step: 0.01, default: 0.6, fmt: v => Math.round(v*100)+'%' },
+    ],
+    render: p => {
+      const g = Math.round(255 * (1 - p.ratio));
+      const b = Math.round(255 * (1 - p.ratio));
+      const hex = '#FF' + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
+      return `<svg width="80" height="30" viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="30" fill="${hex}"/></svg>`;
+    }
+  },
+
+  'Mini Courbe Tendance': {
+    params: [
+      { id: 'v1', label: 'M-5', type: 'number', min: 0, default: 60 },
+      { id: 'v2', label: 'M-4', type: 'number', min: 0, default: 75 },
+      { id: 'v3', label: 'M-3', type: 'number', min: 0, default: 55 },
+      { id: 'v4', label: 'M-2', type: 'number', min: 0, default: 80 },
+      { id: 'v5', label: 'M-1', type: 'number', min: 0, default: 70 },
+      { id: 'v6', label: 'M actuel', type: 'number', min: 0, default: 90 },
+    ],
+    render: p => {
+      const vals = [p.v1,p.v2,p.v3,p.v4,p.v5,p.v6];
+      const mx = Math.max(...vals), mn = Math.min(...vals), rng = mx - mn || 1;
+      const xs = [5,19,33,47,61,75];
+      const pts = vals.map((v,i) => `${xs[i]},${Math.round(28 - ((v-mn)/rng)*24)}`).join(' ');
+      const lastY = Math.round(28 - ((p.v6-mn)/rng)*24);
+      return `<svg width="80" height="34" viewBox="0 0 80 34" fill="none" xmlns="http://www.w3.org/2000/svg"><polyline points="${pts}" fill="none" stroke="#6366F1" stroke-width="2" stroke-linejoin="round"/><circle cx="75" cy="${lastY}" r="3" fill="#6366F1"/></svg>`;
+    }
+  },
+
+  'Alerte Seuil': {
+    params: [
+      { id: 'val',   label: 'Valeur',  type: 'number', min: 0, default: 120 },
+      { id: 'seuil', label: 'Seuil',   type: 'number', min: 0, default: 100 },
+    ],
+    render: p => {
+      const over = p.val > p.seuil;
+      const c = over ? '#EF4444' : '#22C55E';
+      const bg = over ? '#FEE2E2' : '#DCFCE7';
+      const icon = over
+        ? 'M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'
+        : 'M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3';
+      return `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="${bg}"/><path d="${icon}" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+    }
+  },
 };
 
 let _currentGenFn = null;
