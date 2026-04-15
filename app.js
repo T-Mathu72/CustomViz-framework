@@ -482,6 +482,137 @@ const SVG_GENERATORS = {
 
 let _currentGenFn = null;
 
+// ---- Générateur générique (parse le SVG et extrait les paramètres) ----
+function buildGenericGenerator(fn) {
+  const form = document.getElementById('genForm');
+  const wrap = document.getElementById('genPreviewWrap');
+  const svgOrig = fn.svg_preview?.trim() || '';
+
+  if (!svgOrig) {
+    form.innerHTML = '';
+    wrap.innerHTML = `<div class="svg-empty"><span>🎨</span>Aucun SVG disponible.</div>`;
+    wrap._rawSvg = '';
+    return;
+  }
+
+  const fields = [];
+  const mods   = {};
+
+  // ── Couleurs uniques (fill / stroke) ──
+  const colorRx = /(?:fill|stroke)="(#[0-9A-Fa-f]{3,8})"/g;
+  const seenC = new Map(); // color → count
+  let cm;
+  while ((cm = colorRx.exec(svgOrig)) !== null) {
+    const c = cm[1];
+    seenC.set(c, (seenC.get(c) || 0) + 1);
+  }
+  seenC.forEach((count, c) => {
+    const id = 'c_' + c.replace('#', '');
+    mods[id] = { type: 'color', original: c, current: c };
+    fields.push({ id, type: 'color', label: `Couleur ${c}${count > 1 ? ' ×'+count : ''}`, default: c });
+  });
+
+  // ── Stroke-width ──
+  const swM = svgOrig.match(/stroke-width="([0-9.]+)"/);
+  if (swM) {
+    mods['sw'] = { type: 'attr', attr: 'stroke-width', original: swM[1], current: swM[1] };
+    fields.push({ id: 'sw', type: 'range', label: 'Épaisseur trait', min: 0.5, max: 12, step: 0.5, default: +swM[1], fmt: v => v });
+  }
+
+  // ── Opacity ──
+  const opM = svgOrig.match(/\bopacity="([0-9.]+)"/);
+  if (opM) {
+    mods['op'] = { type: 'attr', attr: 'opacity', original: opM[1], current: opM[1] };
+    fields.push({ id: 'op', type: 'range', label: 'Opacité', min: 0, max: 1, step: 0.05, default: +opM[1], fmt: v => Math.round(v*100)+'%' });
+  }
+
+  // ── Font-size ──
+  const fsM = svgOrig.match(/font-size="([0-9.]+)"/);
+  if (fsM) {
+    mods['fs'] = { type: 'attr', attr: 'font-size', original: fsM[1], current: fsM[1] };
+    fields.push({ id: 'fs', type: 'range', label: 'Taille texte', min: 6, max: 36, step: 1, default: +fsM[1], fmt: v => v+'px' });
+  }
+
+  // ── Rx (arrondi) ──
+  const rxM = svgOrig.match(/\brx="([0-9.]+)"/);
+  if (rxM) {
+    mods['rx'] = { type: 'attr', attr: 'rx', original: rxM[1], current: rxM[1] };
+    fields.push({ id: 'rx', type: 'range', label: 'Arrondi', min: 0, max: 20, step: 1, default: +rxM[1], fmt: v => v+'px' });
+  }
+
+  // ── Stroke-linecap (dropdown) ──
+  const lcM = svgOrig.match(/stroke-linecap="([^"]+)"/);
+  if (lcM) {
+    mods['lc'] = { type: 'attr', attr: 'stroke-linecap', original: lcM[1], current: lcM[1] };
+    fields.push({ id: 'lc', type: 'select', label: 'Extrémités', options: ['round','square','butt'], default: lcM[1] });
+  }
+
+  // ── Stroke-linejoin (dropdown) ──
+  const ljM = svgOrig.match(/stroke-linejoin="([^"]+)"/);
+  if (ljM) {
+    mods['lj'] = { type: 'attr', attr: 'stroke-linejoin', original: ljM[1], current: ljM[1] };
+    fields.push({ id: 'lj', type: 'select', label: 'Jointures', options: ['round','miter','bevel'], default: ljM[1] });
+  }
+
+  // ── Rendu du formulaire ──
+  if (fields.length === 0) {
+    form.innerHTML = `<p class="gen-no-support">Aucun paramètre modifiable détecté dans ce SVG.</p>`;
+  } else {
+    form.innerHTML = fields.map(f => {
+      if (f.type === 'color') return `
+        <div class="gen-field">
+          <label>${f.label}</label>
+          <div class="gen-field-row">
+            <input type="color" data-id="${f.id}" value="${f.default}">
+            <span class="gen-val-badge" id="badge-${f.id}">${f.default}</span>
+          </div>
+        </div>`;
+      if (f.type === 'range') return `
+        <div class="gen-field">
+          <label>${f.label}</label>
+          <div class="gen-field-row">
+            <input type="range" data-id="${f.id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${f.default}">
+            <span class="gen-val-badge" id="badge-${f.id}">${f.fmt ? f.fmt(f.default) : f.default}</span>
+          </div>
+        </div>`;
+      if (f.type === 'select') return `
+        <div class="gen-field">
+          <label>${f.label}</label>
+          <select data-id="${f.id}" class="gen-select">
+            ${f.options.map(o => `<option${o===f.default?' selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>`;
+    }).join('');
+  }
+
+  function applyAndPreview() {
+    let svg = svgOrig;
+    for (const mod of Object.values(mods)) {
+      if (mod.type === 'color') {
+        svg = svg.replaceAll(mod.original, mod.current);
+      } else {
+        svg = svg.replaceAll(`${mod.attr}="${mod.original}"`, `${mod.attr}="${mod.current}"`);
+      }
+    }
+    wrap.innerHTML = stripSvgDims(svg);
+    wrap._rawSvg = svg;
+  }
+
+  form.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('input', () => {
+      const mod = mods[el.dataset.id];
+      const field = fields.find(f => f.id === el.dataset.id);
+      if (!mod) return;
+      mod.current = el.value;
+      const badge = document.getElementById('badge-' + el.dataset.id);
+      if (badge) badge.textContent = field?.fmt ? field.fmt(parseFloat(el.value)) : el.value;
+      applyAndPreview();
+    });
+  });
+
+  applyAndPreview();
+}
+
 function buildGenerator(fn) {
   const genBtn = document.getElementById('tabGenBtn');
   genBtn.style.display = ''; // toujours visible
@@ -540,29 +671,8 @@ function buildGenerator(fn) {
     updatePreview();
 
   } else {
-    // ── Éditeur SVG générique ──
-    const initial = fn.svg_preview?.trim() || '';
-    document.getElementById('genForm').innerHTML = `
-      <div class="gen-field" style="grid-column:1/-1">
-        <label>Éditeur SVG — modifiez et prévisualisez en direct</label>
-        <textarea id="genSvgEditor" rows="6" style="
-          width:100%; background:var(--surface2); border:1px solid var(--border);
-          border-radius:var(--radius-xs); color:var(--text); font-family:var(--font-mono);
-          font-size:.74rem; padding:.6rem .75rem; line-height:1.6; resize:vertical;
-        " placeholder="<svg ...>...</svg>">${escHtml(initial)}</textarea>
-      </div>`;
-
-    const wrap = document.getElementById('genPreviewWrap');
-    const editor = document.getElementById('genSvgEditor');
-
-    function refreshGeneric() {
-      const val = editor.value.trim();
-      wrap.innerHTML = val ? stripSvgDims(val) : `<div class="svg-empty"><span>🎨</span>Collez votre SVG ci-dessus</div>`;
-      wrap._rawSvg = val;
-    }
-
-    editor.addEventListener('input', refreshGeneric);
-    refreshGeneric();
+    // ── Générateur générique (extraction automatique des paramètres) ──
+    buildGenericGenerator(fn);
   }
 }
 
