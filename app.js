@@ -33,7 +33,6 @@ async function loadFunctions() {
 
   buildSidebarCats(cats);
   buildFilters(cats);
-  buildCarousel();
   renderGrid(allFunctions);
 }
 
@@ -105,51 +104,6 @@ function syncSidebar() {
   document.querySelectorAll('#sbCats .sb-cat-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.cat === activeCategory));
 }
-
-// ---- Carousel ----
-function buildCarousel() {
-  const track = document.getElementById('carouselTrack');
-  const recent = allFunctions.slice(0, 10);
-
-  if (recent.length === 0) {
-    track.innerHTML = `<div style="color:var(--text-muted);font-size:.84rem;padding:.5rem 0">Aucune mesure pour l'instant.</div>`;
-    return;
-  }
-
-  track.innerHTML = recent.map(fn => {
-    const color = categoryColor(fn.categorie);
-    return `
-      <div class="cc" data-id="${fn.id}">
-        <div class="cc-header" style="background:${color}">
-          <span class="cc-cat">${escHtml(fn.categorie || 'Général')}</span>
-          <span class="cc-badge">DAX</span>
-        </div>
-        <div class="cc-body">
-          <div class="cc-name">${escHtml(fn.nom)}</div>
-          <div class="cc-desc">${escHtml(fn.description || '')}</div>
-        </div>
-        <div class="cc-footer">
-          <span class="cc-date">${formatDate(fn.created_at)}</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </div>`;
-  }).join('');
-
-  track.querySelectorAll('.cc').forEach(card => {
-    card.addEventListener('click', () => {
-      const fn = allFunctions.find(f => f.id === card.dataset.id);
-      if (fn) openModal(fn);
-    });
-  });
-}
-
-// Carousel navigation
-document.getElementById('carouselPrev').addEventListener('click', () => {
-  document.getElementById('carouselTrack').scrollBy({ left: -528, behavior: 'smooth' });
-});
-document.getElementById('carouselNext').addEventListener('click', () => {
-  document.getElementById('carouselTrack').scrollBy({ left: 528, behavior: 'smooth' });
-});
 
 // Sidebar mobile toggle
 const sbToggle = document.getElementById('sbToggle');

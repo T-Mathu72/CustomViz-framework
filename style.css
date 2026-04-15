@@ -63,15 +63,13 @@ html:not([data-theme="dark"]) {
 
 /* ===== RESET ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; overflow-x: hidden; }
+html { scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  display: flex;
-  overflow-x: hidden;
 }
 
 /* ===== SIDEBAR ===== */
@@ -234,10 +232,11 @@ body {
 /* ===== PAGE WRAP ===== */
 .page-wrap {
   margin-left: var(--sidebar-w);
-  flex: 1;
+  width: calc(100% - var(--sidebar-w));
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* ===== HEADER ===== */
