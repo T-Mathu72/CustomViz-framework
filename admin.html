@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — M Framework</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-bracket">{</span>M<span class="logo-bracket">}</span>
+        <span class="logo-text">Framework</span>
+      </div>
+      <nav>
+        <a href="index.html">Bibliothèque</a>
+        <a href="admin.html" class="btn-admin active">+ Ajouter</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main">
+
+    <section class="hero">
+      <h1>Gestion des<br/><span class="accent">Fonctions</span></h1>
+      <p>Ajoutez ou supprimez des fonctions M de votre bibliothèque.</p>
+    </section>
+
+    <!-- Formulaire ajout -->
+    <div class="card form-card">
+      <h2 class="card-title">✦ Nouvelle fonction</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label>Nom de la fonction *</label>
+          <input type="text" id="inputNom" placeholder="ex: fn_NettoyerTexte" />
+        </div>
+        <div class="field">
+          <label>Catégorie *</label>
+          <input type="text" id="inputCategorie" placeholder="ex: Texte, Date, Table…" />
+        </div>
+        <div class="field full">
+          <label>Description *</label>
+          <textarea id="inputDesc" rows="2" placeholder="Ce que fait la fonction…"></textarea>
+        </div>
+        <div class="field full">
+          <label>Code M *</label>
+          <textarea id="inputCode" rows="8" placeholder="let&#10;  fn = (param as text) as text =>&#10;    ...&#10;in&#10;  fn"></textarea>
+        </div>
+      </div>
+      <div class="form-footer">
+        <span class="form-msg" id="formMsg"></span>
+        <button class="btn-primary" id="btnAjouter">Ajouter la fonction</button>
+      </div>
+    </div>
+
+    <!-- Liste pour suppression -->
+    <div class="card">
+      <h2 class="card-title">✦ Fonctions existantes</h2>
+      <div class="search-wrap" style="margin-bottom:1.5rem">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="adminSearch" placeholder="Filtrer les fonctions…" />
+      </div>
+      <div id="adminList" class="admin-list">
+        <div class="loading"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Confirm delete modal -->
+  <div class="modal-overlay" id="deleteOverlay">
+    <div class="modal modal-small">
+      <div class="modal-header">
+        <h2>Supprimer la fonction ?</h2>
+        <button class="modal-close" id="deleteCancel">✕</button>
+      </div>
+      <p style="color:var(--text-muted);margin-bottom:1.5rem">Cette action est irréversible.</p>
+      <div style="display:flex;gap:1rem;justify-content:flex-end">
+        <button class="btn-ghost" id="deleteCancelBtn">Annuler</button>
+        <button class="btn-danger" id="deleteConfirmBtn">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
