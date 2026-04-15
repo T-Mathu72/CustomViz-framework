@@ -283,10 +283,10 @@ html:not([data-theme="dark"]) header { background: rgba(255,255,255,.95); backdr
 }
 .header-search .search-icon {
   position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
-  width: 14px; color: var(--text-muted); pointer-events: none;
-  transition: opacity .15s;
+  width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;
 }
-.header-search.has-value .search-icon { opacity: 0; pointer-events: none; }
+.header-search.has-value .search-icon,
+.header-search.focused .search-icon { display: none; }
 .header-search input {
   width: 100%;
   background: var(--surface2);

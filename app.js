@@ -250,10 +250,13 @@ function applyFilters() {
   renderGrid(filtered);
 }
 const searchInputEl = document.getElementById('searchInput');
+const searchWrap = searchInputEl.closest('.header-search');
 searchInputEl.addEventListener('input', () => {
   applyFilters();
-  searchInputEl.closest('.header-search').classList.toggle('has-value', searchInputEl.value.length > 0);
+  searchWrap.classList.toggle('has-value', searchInputEl.value.length > 0);
 });
+searchInputEl.addEventListener('focus', () => searchWrap.classList.add('focused'));
+searchInputEl.addEventListener('blur',  () => searchWrap.classList.remove('focused'));
 
 // ---- Générateurs SVG ----
 const SVG_GENERATORS = {
