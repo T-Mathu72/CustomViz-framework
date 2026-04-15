@@ -138,6 +138,25 @@ body {
   letter-spacing: .1em;
   color: var(--text-muted);
   padding: 0 .25rem;
+}
+.sb-type-label {
+  font-size: .58rem;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--accent);
+  opacity: .75;
+  padding: .5rem .25rem .2rem;
+}
+.sb-section-label {
+  font-size: .6rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  padding: 0 .25rem;
   margin-bottom: .4rem;
 }
 .sb-nav-link {

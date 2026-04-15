@@ -33,12 +33,12 @@ async function loadFunctions() {
   buildSidebarCats(cats);
   buildFilters(cats);
   buildImageSection();
-  renderGrid(allFunctions.filter(f => f.categorie !== 'Carte KPI'));
+  renderGrid(allFunctions.filter(f => f.categorie !== 'Carte'));
 }
 
 // ---- Cartes SVG (images) ----
 function buildImageSection() {
-  const cards = allFunctions.filter(f => f.categorie === 'Carte KPI');
+  const cards = allFunctions.filter(f => f.categorie === 'Carte');
   const section = document.getElementById('imageSection');
   const container = document.getElementById('imageCards');
   if (!section || !container) return;
@@ -69,37 +69,57 @@ function buildImageSection() {
 function buildSidebarCats(cats) {
   const container = document.getElementById('sbCats');
   if (!container) return;
+  container.innerHTML = '';
 
-  // Bouton "Toutes"
+  const tableCats = cats.filter(c => c !== 'Carte');
+  const hasCartes  = cats.includes('Carte');
+  const tableCount = allFunctions.filter(f => f.categorie !== 'Carte').length;
+
+  // ── Super-catégorie TABLE ──
+  container.insertAdjacentHTML('beforeend',
+    '<div class="sb-type-label">Table</div>');
+
   const allBtn = document.createElement('button');
   allBtn.className = 'sb-cat-btn active';
   allBtn.dataset.cat = 'all';
-  allBtn.innerHTML = `
-    <span class="sb-cat-dot" style="background:var(--accent)"></span>
-    Toutes
-    <span class="sb-cat-count">${allFunctions.length}</span>`;
+  allBtn.innerHTML = `<span class="sb-cat-dot" style="background:var(--accent)"></span>Toutes<span class="sb-cat-count">${tableCount}</span>`;
   container.appendChild(allBtn);
 
-  cats.forEach(cat => {
+  tableCats.forEach(cat => {
     const count = allFunctions.filter(f => f.categorie === cat).length;
     const color = categoryColor(cat);
     const btn = document.createElement('button');
     btn.className = 'sb-cat-btn';
     btn.dataset.cat = cat;
-    btn.innerHTML = `
-      <span class="sb-cat-dot" style="background:${color}"></span>
-      ${escHtml(cat)}
-      <span class="sb-cat-count">${count}</span>`;
+    btn.innerHTML = `<span class="sb-cat-dot" style="background:${color}"></span>${escHtml(cat)}<span class="sb-cat-count">${count}</span>`;
     container.appendChild(btn);
   });
 
+  // ── Super-catégorie CARTE ──
+  if (hasCartes) {
+    const carteCount = allFunctions.filter(f => f.categorie === 'Carte').length;
+    container.insertAdjacentHTML('beforeend',
+      '<div class="sb-type-label" style="margin-top:.9rem">Carte</div>');
+    const carteBtn = document.createElement('button');
+    carteBtn.className = 'sb-cat-btn';
+    carteBtn.dataset.cat = 'Carte';
+    carteBtn.dataset.type = 'carte';
+    carteBtn.innerHTML = `<span class="sb-cat-dot" style="background:${categoryColor('Carte')}"></span>Cartes SVG<span class="sb-cat-count">${carteCount}</span>`;
+    container.appendChild(carteBtn);
+  }
+
+  // Handlers
   container.querySelectorAll('.sb-cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      activeCategory = btn.dataset.cat;
       container.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      syncFilters();
-      applyFilters();
+      if (btn.dataset.type === 'carte') {
+        document.getElementById('imageSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        activeCategory = btn.dataset.cat;
+        syncFilters();
+        applyFilters();
+      }
     });
   });
 }
@@ -107,8 +127,9 @@ function buildSidebarCats(cats) {
 // ---- Filtres top ----
 function buildFilters(cats) {
   const container = document.getElementById('filters');
+  const tableCats = cats.filter(c => c !== 'Carte');
   container.innerHTML = `<button class="filter-btn active" data-cat="all">Toutes</button>`;
-  cats.forEach(cat => {
+  tableCats.forEach(cat => {
     const btn = document.createElement('button');
     btn.className = 'filter-btn';
     btn.dataset.cat = cat;
@@ -198,7 +219,7 @@ function renderGrid(functions) {
 // ---- Filtrage ----
 function applyFilters() {
   const q = document.getElementById('searchInput').value.toLowerCase();
-  let filtered = allFunctions;
+  let filtered = allFunctions.filter(f => f.categorie !== 'Carte');
   if (activeCategory !== 'all') filtered = filtered.filter(f => f.categorie === activeCategory);
   if (q) filtered = filtered.filter(f =>
     f.nom.toLowerCase().includes(q) ||
