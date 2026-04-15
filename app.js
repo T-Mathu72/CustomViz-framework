@@ -36,16 +36,26 @@ async function loadFunctions() {
   renderGrid(allFunctions.filter(f => f.categorie !== 'Carte'));
 }
 
+// ---- Vue Table / Carte ----
+function switchView(type) {
+  const tableSection = document.getElementById('tableSection');
+  const imageSection = document.getElementById('imageSection');
+  if (type === 'carte') {
+    if (tableSection) tableSection.style.display = 'none';
+    if (imageSection) imageSection.style.display = '';
+  } else {
+    if (tableSection) tableSection.style.display = '';
+    if (imageSection) imageSection.style.display = 'none';
+  }
+}
+
 // ---- Cartes SVG (images) ----
 function buildImageSection() {
   const cards = allFunctions.filter(f => f.categorie === 'Carte');
-  const section = document.getElementById('imageSection');
   const container = document.getElementById('imageCards');
-  if (!section || !container) return;
+  if (!container || cards.length === 0) return;
 
-  if (cards.length === 0) { section.style.display = 'none'; return; }
-  section.style.display = '';
-
+  // Construit le contenu mais reste caché — affiché uniquement via switchView
   container.innerHTML = cards.map(fn => `
     <div class="img-card" data-id="${fn.id}">
       <div class="img-card-preview">
@@ -100,6 +110,16 @@ function buildSidebarCats(cats) {
     const carteCount = allFunctions.filter(f => f.categorie === 'Carte').length;
     container.insertAdjacentHTML('beforeend',
       '<div class="sb-type-label" style="margin-top:.9rem">Carte</div>');
+
+    // Bouton "Toutes" pour les cartes
+    const carteToutesBtn = document.createElement('button');
+    carteToutesBtn.className = 'sb-cat-btn';
+    carteToutesBtn.dataset.cat = 'all-carte';
+    carteToutesBtn.dataset.type = 'carte';
+    carteToutesBtn.innerHTML = `<span class="sb-cat-dot" style="background:var(--accent)"></span>Toutes<span class="sb-cat-count">${carteCount}</span>`;
+    container.appendChild(carteToutesBtn);
+
+    // Sous-catégorie "Carte"
     const carteBtn = document.createElement('button');
     carteBtn.className = 'sb-cat-btn';
     carteBtn.dataset.cat = 'Carte';
@@ -114,8 +134,9 @@ function buildSidebarCats(cats) {
       container.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       if (btn.dataset.type === 'carte') {
-        document.getElementById('imageSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        switchView('carte');
       } else {
+        switchView('table');
         activeCategory = btn.dataset.cat;
         syncFilters();
         applyFilters();
