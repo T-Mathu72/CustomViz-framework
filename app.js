@@ -249,7 +249,11 @@ function applyFilters() {
   );
   renderGrid(filtered);
 }
-document.getElementById('searchInput').addEventListener('input', applyFilters);
+const searchInputEl = document.getElementById('searchInput');
+searchInputEl.addEventListener('input', () => {
+  applyFilters();
+  searchInputEl.closest('.header-search').classList.toggle('has-value', searchInputEl.value.length > 0);
+});
 
 // ---- Générateurs SVG ----
 const SVG_GENERATORS = {

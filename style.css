@@ -286,7 +286,7 @@ html:not([data-theme="dark"]) header { background: rgba(255,255,255,.95); backdr
   width: 14px; color: var(--text-muted); pointer-events: none;
   transition: opacity .15s;
 }
-.header-search:has(input:not(:placeholder-shown)) .search-icon { opacity: 0; }
+.header-search.has-value .search-icon { opacity: 0; pointer-events: none; }
 .header-search input {
   width: 100%;
   background: var(--surface2);
