@@ -541,11 +541,12 @@ main { padding: 2rem 2rem 5rem; flex: 1; }
   overflow: hidden; line-height: 1.5;
 }
 .fn-svg-thumb {
-  width: 58px; height: 58px; border-radius: var(--radius-sm);
+  width: 72px; min-height: 20px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--surface2);
-  overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; padding: 4px;
 }
-.fn-svg-thumb svg { width: 100%; height: 100%; display: block; }
+.fn-svg-thumb svg { width: 100%; height: auto; display: block; }
 .fn-dax-icon {
   width: 58px; height: 58px; border-radius: var(--radius-sm);
   background: var(--surface2); border: 1px solid var(--border);
@@ -664,7 +665,7 @@ pre {
   background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: 2rem; display: flex; align-items: center; justify-content: center; min-height: 160px;
 }
-.svg-preview-wrap svg { max-width: 100%; max-height: 320px; }
+.svg-preview-wrap svg { width: 100%; height: auto; display: block; max-height: 320px; }
 .svg-empty { text-align: center; color: var(--text-muted); font-size: .8rem; font-family: var(--font-mono); }
 .svg-empty span { display: block; font-size: 1.8rem; margin-bottom: .5rem; }
 
@@ -735,7 +736,7 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
   background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: 1.1rem; min-height: 96px; display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.svg-live-preview svg { max-width: 100%; max-height: 180px; }
+.svg-live-preview svg { width: 100%; height: auto; display: block; max-height: 180px; }
 
 .admin-list { display: flex; flex-direction: column; }
 .admin-item {

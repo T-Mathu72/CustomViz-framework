@@ -163,6 +163,14 @@ if (sbToggle && sidebar) {
   });
 }
 
+// Retire les attributs width/height du tag <svg> pour laisser le CSS contrôler la taille
+function stripSvgDims(svgStr) {
+  return svgStr.replace(/<svg\b([^>]*)>/i, (_, attrs) => {
+    attrs = attrs.replace(/\s*(?:width|height)="[^"]*"/gi, '');
+    return `<svg${attrs}>`;
+  });
+}
+
 // ---- Rendu grille ----
 function renderGrid(functions) {
   const grid  = document.getElementById('grid');
@@ -177,7 +185,7 @@ function renderGrid(functions) {
   grid.innerHTML = functions.map(fn => {
     const color = categoryColor(fn.categorie);
     const thumb = fn.svg_preview && fn.svg_preview.trim()
-      ? `<div class="fn-svg-thumb">${fn.svg_preview}</div>`
+      ? `<div class="fn-svg-thumb">${stripSvgDims(fn.svg_preview)}</div>`
       : `<div class="fn-dax-icon" style="color:${color}">DAX</div>`;
     return `
       <div class="fn-card" data-id="${fn.id}" style="--cat-color:${color}">
