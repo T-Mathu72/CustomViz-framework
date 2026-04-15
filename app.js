@@ -463,58 +463,86 @@ let _currentGenFn = null;
 
 function buildGenerator(fn) {
   const genBtn = document.getElementById('tabGenBtn');
-  const gen = SVG_GENERATORS[fn.nom];
-  if (!gen) { genBtn.style.display = 'none'; return; }
-  genBtn.style.display = '';
+  genBtn.style.display = ''; // toujours visible
   _currentGenFn = fn;
 
-  const form = document.getElementById('genForm');
-  // Initialize values from defaults
-  const vals = {};
-  gen.params.forEach(p => { vals[p.id] = p.default; });
+  const gen = SVG_GENERATORS[fn.nom];
 
-  function updatePreview() {
-    const svgStr = gen.render(vals);
-    document.getElementById('genPreviewWrap').innerHTML = stripSvgDims(svgStr);
-    document.getElementById('genPreviewWrap')._rawSvg = svgStr;
-  }
+  if (gen) {
+    // ── Générateur avec paramètres ──
+    const form = document.getElementById('genForm');
+    const vals = {};
+    gen.params.forEach(p => { vals[p.id] = p.default; });
 
-  form.innerHTML = gen.params.map(p => {
-    if (p.type === 'range') {
-      return `<div class="gen-field">
-        <label>${p.label}</label>
-        <div class="gen-field-row">
-          <input type="range" data-id="${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}">
-          <span class="gen-val-badge" id="badge-${p.id}">${p.fmt ? p.fmt(p.default) : p.default}</span>
-        </div>
-      </div>`;
-    } else if (p.type === 'color') {
-      return `<div class="gen-field">
-        <label>${p.label}</label>
-        <div class="gen-field-row">
-          <input type="color" data-id="${p.id}" value="${p.default}">
-          <span class="gen-val-badge" id="badge-${p.id}">${p.default}</span>
-        </div>
-      </div>`;
-    } else {
-      return `<div class="gen-field">
-        <label>${p.label}</label>
-        <input type="number" data-id="${p.id}" min="${p.min ?? 0}" value="${p.default}">
-      </div>`;
+    function updatePreview() {
+      const svgStr = gen.render(vals);
+      document.getElementById('genPreviewWrap').innerHTML = stripSvgDims(svgStr);
+      document.getElementById('genPreviewWrap')._rawSvg = svgStr;
     }
-  }).join('');
 
-  form.querySelectorAll('input').forEach(input => {
-    input.addEventListener('input', () => {
-      const param = gen.params.find(p => p.id === input.dataset.id);
-      vals[input.dataset.id] = input.type === 'number' ? parseFloat(input.value) || 0 : (input.type === 'range' ? parseFloat(input.value) : input.value);
-      const badge = document.getElementById('badge-' + input.dataset.id);
-      if (badge) badge.textContent = param?.fmt ? param.fmt(vals[input.dataset.id]) : input.value;
-      updatePreview();
+    form.innerHTML = gen.params.map(p => {
+      if (p.type === 'range') {
+        return `<div class="gen-field">
+          <label>${p.label}</label>
+          <div class="gen-field-row">
+            <input type="range" data-id="${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}">
+            <span class="gen-val-badge" id="badge-${p.id}">${p.fmt ? p.fmt(p.default) : p.default}</span>
+          </div>
+        </div>`;
+      } else if (p.type === 'color') {
+        return `<div class="gen-field">
+          <label>${p.label}</label>
+          <div class="gen-field-row">
+            <input type="color" data-id="${p.id}" value="${p.default}">
+            <span class="gen-val-badge" id="badge-${p.id}">${p.default}</span>
+          </div>
+        </div>`;
+      } else {
+        return `<div class="gen-field">
+          <label>${p.label}</label>
+          <input type="number" data-id="${p.id}" min="${p.min ?? 0}" value="${p.default}">
+        </div>`;
+      }
+    }).join('');
+
+    form.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => {
+        const param = gen.params.find(p => p.id === input.dataset.id);
+        vals[input.dataset.id] = input.type === 'number' ? parseFloat(input.value) || 0
+          : input.type === 'range' ? parseFloat(input.value) : input.value;
+        const badge = document.getElementById('badge-' + input.dataset.id);
+        if (badge) badge.textContent = param?.fmt ? param.fmt(vals[input.dataset.id]) : input.value;
+        updatePreview();
+      });
     });
-  });
 
-  updatePreview();
+    updatePreview();
+
+  } else {
+    // ── Éditeur SVG générique ──
+    const initial = fn.svg_preview?.trim() || '';
+    document.getElementById('genForm').innerHTML = `
+      <div class="gen-field" style="grid-column:1/-1">
+        <label>Éditeur SVG — modifiez et prévisualisez en direct</label>
+        <textarea id="genSvgEditor" rows="6" style="
+          width:100%; background:var(--surface2); border:1px solid var(--border);
+          border-radius:var(--radius-xs); color:var(--text); font-family:var(--font-mono);
+          font-size:.74rem; padding:.6rem .75rem; line-height:1.6; resize:vertical;
+        " placeholder="<svg ...>...</svg>">${escHtml(initial)}</textarea>
+      </div>`;
+
+    const wrap = document.getElementById('genPreviewWrap');
+    const editor = document.getElementById('genSvgEditor');
+
+    function refreshGeneric() {
+      const val = editor.value.trim();
+      wrap.innerHTML = val ? stripSvgDims(val) : `<div class="svg-empty"><span>🎨</span>Collez votre SVG ci-dessus</div>`;
+      wrap._rawSvg = val;
+    }
+
+    editor.addEventListener('input', refreshGeneric);
+    refreshGeneric();
+  }
 }
 
 // ---- Modal ----
