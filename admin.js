@@ -1,4 +1,4 @@
-// ===== ADMIN.JS — Gestion des fonctions =====
+// ===== ADMIN.JS — CustomViz =====
 
 let allFunctions = [];
 let pendingDeleteId = null;
@@ -12,7 +12,7 @@ async function loadAdminList() {
 
   if (error) {
     document.getElementById('adminList').innerHTML =
-      `<p style="color:var(--danger)">Erreur : ${error.message}</p>`;
+      `<p style="color:var(--danger);font-family:var(--font-mono);font-size:0.82rem">Erreur : ${error.message}</p>`;
     return;
   }
   allFunctions = data || [];
@@ -22,7 +22,7 @@ async function loadAdminList() {
 function renderAdminList(list) {
   const container = document.getElementById('adminList');
   if (list.length === 0) {
-    container.innerHTML = `<p style="color:var(--text-muted);padding:1rem 0">Aucune fonction pour l'instant.</p>`;
+    container.innerHTML = `<p style="color:var(--text-muted);padding:1rem 0;font-size:0.85rem">Aucune mesure pour l'instant.</p>`;
     return;
   }
   container.innerHTML = list.map(fn => `
@@ -43,7 +43,7 @@ function renderAdminList(list) {
   });
 }
 
-// ---- Recherche dans l'admin ----
+// ---- Recherche ----
 document.getElementById('adminSearch').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
   const filtered = allFunctions.filter(f =>
@@ -53,16 +53,28 @@ document.getElementById('adminSearch').addEventListener('input', e => {
   renderAdminList(filtered);
 });
 
+// ---- Live SVG preview ----
+document.getElementById('inputSvg').addEventListener('input', e => {
+  const preview = document.getElementById('svgLivePreview');
+  const val = e.target.value.trim();
+  if (val) {
+    preview.innerHTML = val;
+  } else {
+    preview.innerHTML = `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.76rem">L'aperçu SVG apparaîtra ici</span>`;
+  }
+});
+
 // ---- Ajout ----
 document.getElementById('btnAjouter').addEventListener('click', async () => {
-  const nom        = document.getElementById('inputNom').value.trim();
-  const categorie  = document.getElementById('inputCategorie').value.trim();
+  const nom         = document.getElementById('inputNom').value.trim();
+  const categorie   = document.getElementById('inputCategorie').value.trim();
   const description = document.getElementById('inputDesc').value.trim();
-  const code       = document.getElementById('inputCode').value.trim();
-  const msg        = document.getElementById('formMsg');
+  const code        = document.getElementById('inputCode').value.trim();
+  const svg_preview = document.getElementById('inputSvg').value.trim() || null;
+  const msg         = document.getElementById('formMsg');
 
   if (!nom || !categorie || !description || !code) {
-    msg.textContent = '⚠ Tous les champs sont obligatoires.';
+    msg.textContent = '⚠ Tous les champs obligatoires doivent être remplis.';
     msg.className = 'form-msg error';
     return;
   }
@@ -72,7 +84,7 @@ document.getElementById('btnAjouter').addEventListener('click', async () => {
 
   const { error } = await db
     .from('fonctions')
-    .insert([{ nom, categorie, description, code }]);
+    .insert([{ nom, categorie, description, code, svg_preview }]);
 
   if (error) {
     msg.textContent = `❌ Erreur : ${error.message}`;
@@ -80,14 +92,16 @@ document.getElementById('btnAjouter').addEventListener('click', async () => {
     return;
   }
 
-  msg.textContent = '✓ Fonction ajoutée avec succès !';
+  msg.textContent = '✓ Mesure ajoutée avec succès !';
   msg.className = 'form-msg success';
 
-  // Reset form
   document.getElementById('inputNom').value = '';
   document.getElementById('inputCategorie').value = '';
   document.getElementById('inputDesc').value = '';
   document.getElementById('inputCode').value = '';
+  document.getElementById('inputSvg').value = '';
+  document.getElementById('svgLivePreview').innerHTML =
+    `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.76rem">L'aperçu SVG apparaîtra ici</span>`;
 
   setTimeout(() => { msg.textContent = ''; }, 3000);
   loadAdminList();
@@ -96,14 +110,9 @@ document.getElementById('btnAjouter').addEventListener('click', async () => {
 // ---- Suppression ----
 document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
   if (!pendingDeleteId) return;
-  const { error } = await db
-    .from('fonctions')
-    .delete()
-    .eq('id', pendingDeleteId);
-
+  const { error } = await db.from('fonctions').delete().eq('id', pendingDeleteId);
   document.getElementById('deleteOverlay').classList.remove('open');
   pendingDeleteId = null;
-
   if (!error) loadAdminList();
 });
 
@@ -118,10 +127,8 @@ function closeDeleteModal() {
   pendingDeleteId = null;
 }
 
-// ---- Helper ----
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ---- Init ----
 loadAdminList();

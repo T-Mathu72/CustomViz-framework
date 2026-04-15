@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin — M Framework</title>
+  <title>Admin — CustomViz</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
 </head>
@@ -11,10 +11,11 @@
 
   <header>
     <div class="header-inner">
-      <div class="logo">
-        <span class="logo-bracket">{</span>M<span class="logo-bracket">}</span>
-        <span class="logo-text">Framework</span>
-      </div>
+      <a href="index.html" class="logo">
+        <div class="logo-mark">CV</div>
+        <span class="logo-name">CustomViz</span>
+        <span class="logo-badge">DAX · SVG</span>
+      </a>
       <nav>
         <a href="index.html">Bibliothèque</a>
         <a href="admin.html" class="btn-admin active">+ Ajouter</a>
@@ -25,43 +26,53 @@
   <main class="admin-main">
 
     <section class="hero">
-      <h1>Gestion des<br/><span class="accent">Fonctions</span></h1>
-      <p>Ajoutez ou supprimez des fonctions M de votre bibliothèque.</p>
+      <div class="hero-eyebrow">Administration</div>
+      <h1>Gestion des<br/><span class="accent">Mesures</span></h1>
+      <p>Ajoutez et gérez vos mesures DAX avec aperçu SVG.</p>
     </section>
 
-    <!-- Formulaire ajout -->
-    <div class="card form-card">
-      <h2 class="card-title">✦ Nouvelle fonction</h2>
+    <div class="card">
+      <h2 class="card-title">✦ Nouvelle mesure</h2>
       <div class="form-grid">
         <div class="field">
-          <label>Nom de la fonction *</label>
-          <input type="text" id="inputNom" placeholder="ex: fn_NettoyerTexte" />
+          <label>Nom de la mesure *</label>
+          <input type="text" id="inputNom" placeholder="ex: KPI Ventes Total" />
         </div>
         <div class="field">
           <label>Catégorie *</label>
-          <input type="text" id="inputCategorie" placeholder="ex: Texte, Date, Table…" />
+          <input type="text" id="inputCategorie" placeholder="ex: KPI, Finance, Date…" />
         </div>
         <div class="field full">
           <label>Description *</label>
-          <textarea id="inputDesc" rows="2" placeholder="Ce que fait la fonction…"></textarea>
+          <textarea id="inputDesc" rows="2" placeholder="Ce que fait cette mesure…"></textarea>
         </div>
         <div class="field full">
-          <label>Code M *</label>
-          <textarea id="inputCode" rows="8" placeholder="let&#10;  fn = (param as text) as text =>&#10;    ...&#10;in&#10;  fn"></textarea>
+          <label>Code DAX *</label>
+          <textarea id="inputCode" rows="8" placeholder="Ventes Total =&#10;CALCULATE(&#10;    SUM(Ventes[Montant]),&#10;    ALLSELECTED()&#10;)"></textarea>
+        </div>
+        <div class="field full">
+          <label>Aperçu SVG <span style="color:var(--text-muted);font-weight:400;text-transform:none">(optionnel)</span></label>
+          <textarea id="inputSvg" rows="5" placeholder="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>&#10;  ...&#10;</svg>"></textarea>
+          <span class="field-hint">Collez le SVG correspondant au rendu visuel de la mesure</span>
+        </div>
+        <div class="field full">
+          <label>Aperçu en direct</label>
+          <div class="svg-live-preview" id="svgLivePreview">
+            <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.76rem">L'aperçu SVG apparaîtra ici</span>
+          </div>
         </div>
       </div>
       <div class="form-footer">
         <span class="form-msg" id="formMsg"></span>
-        <button class="btn-primary" id="btnAjouter">Ajouter la fonction</button>
+        <button class="btn-primary" id="btnAjouter">Ajouter la mesure</button>
       </div>
     </div>
 
-    <!-- Liste pour suppression -->
     <div class="card">
-      <h2 class="card-title">✦ Fonctions existantes</h2>
+      <h2 class="card-title">✦ Mesures existantes</h2>
       <div class="search-wrap" style="margin-bottom:1.5rem">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="adminSearch" placeholder="Filtrer les fonctions…" />
+        <input type="text" id="adminSearch" placeholder="Filtrer les mesures…" />
       </div>
       <div id="adminList" class="admin-list">
         <div class="loading"><div class="spinner"></div><p>Chargement…</p></div>
@@ -74,11 +85,11 @@
   <div class="modal-overlay" id="deleteOverlay">
     <div class="modal modal-small">
       <div class="modal-header">
-        <h2>Supprimer la fonction ?</h2>
+        <h2>Supprimer la mesure ?</h2>
         <button class="modal-close" id="deleteCancel">✕</button>
       </div>
-      <p style="color:var(--text-muted);margin-bottom:1.5rem">Cette action est irréversible.</p>
-      <div style="display:flex;gap:1rem;justify-content:flex-end">
+      <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.88rem">Cette action est irréversible.</p>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end">
         <button class="btn-ghost" id="deleteCancelBtn">Annuler</button>
         <button class="btn-danger" id="deleteConfirmBtn">Supprimer</button>
       </div>

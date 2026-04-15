@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>M Framework — Bibliothèque Power Query</title>
+  <title>CustomViz — Bibliothèque DAX · SVG</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
 </head>
@@ -11,10 +11,11 @@
 
   <header>
     <div class="header-inner">
-      <div class="logo">
-        <span class="logo-bracket">{</span>M<span class="logo-bracket">}</span>
-        <span class="logo-text">Framework</span>
-      </div>
+      <a href="index.html" class="logo">
+        <div class="logo-mark">CV</div>
+        <span class="logo-name">CustomViz</span>
+        <span class="logo-badge">DAX · SVG</span>
+      </a>
       <nav>
         <a href="index.html" class="active">Bibliothèque</a>
         <a href="admin.html" class="btn-admin">+ Ajouter</a>
@@ -24,14 +25,15 @@
 
   <main>
     <section class="hero">
-      <h1>Bibliothèque de<br/><span class="accent">Fonctions M</span></h1>
-      <p>Toutes vos fonctions Power Query au même endroit. Recherchez, copiez, réutilisez.</p>
+      <div class="hero-eyebrow">Power BI · DAX · SVG</div>
+      <h1>Bibliothèque de<br/><span class="accent-dax">Mesures DAX</span> <span class="accent">·</span> <span class="accent-svg">SVG</span></h1>
+      <p>Stockez, recherchez et réutilisez vos mesures DAX avec aperçu SVG intégré.</p>
     </section>
 
     <div class="toolbar">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="searchInput" placeholder="Rechercher une fonction..." />
+        <input type="text" id="searchInput" placeholder="Rechercher une mesure…" />
       </div>
       <div class="filters" id="filters">
         <button class="filter-btn active" data-cat="all">Toutes</button>
@@ -39,13 +41,13 @@
     </div>
 
     <div class="stats-bar">
-      <span id="countDisplay">— fonctions</span>
+      <span id="countDisplay">— mesures</span>
     </div>
 
     <div class="grid" id="grid">
       <div class="loading">
         <div class="spinner"></div>
-        <p>Chargement des fonctions…</p>
+        <p>Chargement des mesures…</p>
       </div>
     </div>
   </main>
@@ -61,15 +63,27 @@
         <button class="modal-close" id="modalClose">✕</button>
       </div>
       <p class="modal-desc" id="modalDesc"></p>
-      <div class="code-block">
-        <div class="code-header">
-          <span>Power Query M</span>
-          <button class="copy-btn" id="copyBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copier le code
-          </button>
+
+      <div class="modal-tabs">
+        <button class="tab-btn active" data-tab="dax"><span class="tab-dot"></span>Mesure DAX</button>
+        <button class="tab-btn" data-tab="svg"><span class="tab-dot"></span>Aperçu SVG</button>
+      </div>
+
+      <div class="tab-panel active" id="tabDax">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang"><span class="code-lang-dot"></span>DAX</span>
+            <button class="copy-btn" id="copyBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copier
+            </button>
+          </div>
+          <pre id="modalCode"></pre>
         </div>
-        <pre id="modalCode"></pre>
+      </div>
+
+      <div class="tab-panel" id="tabSvg">
+        <div class="svg-preview-wrap" id="svgPreviewWrap"></div>
       </div>
     </div>
   </div>
