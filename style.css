@@ -295,7 +295,7 @@ html:not([data-theme="dark"]) header { background: rgba(255,255,255,.95); backdr
   color: var(--text);
   font-family: var(--font-ui);
   font-size: .84rem;
-  padding: .5rem .9rem .5rem 2.2rem;
+  padding: .5rem .9rem .5rem 2.6rem;
   outline: none;
   transition: border-color .16s, box-shadow .16s;
 }
