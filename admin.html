@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin — CustomViz</title>
+  <!-- Anti-flash : applique le thème sauvegardé avant le CSS -->
+  <script>
+    document.documentElement.setAttribute(
+      'data-theme',
+      localStorage.getItem('cv-theme') || 'dark'
+    );
+  </script>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
 </head>
@@ -18,6 +25,24 @@
       </a>
       <nav>
         <a href="index.html">Bibliothèque</a>
+
+        <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+
         <a href="admin.html" class="btn-admin active">+ Ajouter</a>
       </nav>
     </div>
@@ -51,14 +76,14 @@
           <textarea id="inputCode" rows="8" placeholder="Ventes Total =&#10;CALCULATE(&#10;    SUM(Ventes[Montant]),&#10;    ALLSELECTED()&#10;)"></textarea>
         </div>
         <div class="field full">
-          <label>Aperçu SVG <span style="color:var(--text-muted);font-weight:400;text-transform:none">(optionnel)</span></label>
+          <label>Aperçu SVG <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></label>
           <textarea id="inputSvg" rows="5" placeholder="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>&#10;  ...&#10;</svg>"></textarea>
-          <span class="field-hint">Collez le SVG correspondant au rendu visuel de la mesure</span>
+          <span class="field-hint">Collez le SVG du rendu visuel de la mesure</span>
         </div>
         <div class="field full">
           <label>Aperçu en direct</label>
           <div class="svg-live-preview" id="svgLivePreview">
-            <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.76rem">L'aperçu SVG apparaîtra ici</span>
+            <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.74rem">L'aperçu SVG apparaîtra ici</span>
           </div>
         </div>
       </div>
@@ -88,8 +113,8 @@
         <h2>Supprimer la mesure ?</h2>
         <button class="modal-close" id="deleteCancel">✕</button>
       </div>
-      <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.88rem">Cette action est irréversible.</p>
-      <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+      <p style="color:var(--text-sub);margin-bottom:1.5rem;font-size:.87rem;line-height:1.6">Cette action est irréversible.</p>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
         <button class="btn-ghost" id="deleteCancelBtn">Annuler</button>
         <button class="btn-danger" id="deleteConfirmBtn">Supprimer</button>
       </div>
@@ -98,6 +123,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
+  <script src="theme.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
