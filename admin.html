@@ -1,120 +1,128 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin — CustomViz</title>
-  <!-- Anti-flash : applique le thème sauvegardé avant le CSS -->
-  <script>
-    document.documentElement.setAttribute(
-      'data-theme',
-      localStorage.getItem('cv-theme') || 'dark'
-    );
-  </script>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('cv-theme') || 'light');</script>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
-      <a href="index.html" class="logo">
-        <div class="logo-mark">CV</div>
-        <span class="logo-name">CustomViz</span>
-        <span class="logo-badge">DAX · SVG</span>
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sb-logo">
+      <div class="sb-logo-mark">CV</div>
+      <span class="sb-logo-name">CustomViz</span>
+      <span class="sb-logo-badge">Beta</span>
+    </a>
+
+    <div class="sb-section">
+      <div class="sb-section-label">Navigation</div>
+      <a href="index.html" class="sb-nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Bibliothèque
       </a>
-      <nav>
-        <a href="index.html">Bibliothèque</a>
-
-        <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">
-          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/>
-            <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>
-            <line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
-        </button>
-
-        <a href="admin.html" class="btn-admin active">+ Ajouter</a>
-      </nav>
+      <a href="admin.html" class="sb-nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter
+      </a>
     </div>
-  </header>
 
-  <main class="admin-main">
+    <div class="sb-footer">
+      <span class="sb-footer-label">Thème</span>
+      <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </aside>
 
-    <section class="hero">
-      <div class="hero-eyebrow">Administration</div>
-      <h1>Gestion des<br/><span class="accent">Mesures</span></h1>
-      <p>Ajoutez et gérez vos mesures DAX avec aperçu SVG.</p>
-    </section>
+  <!-- ── Page ── -->
+  <div class="page-wrap">
 
-    <div class="card">
-      <h2 class="card-title">✦ Nouvelle mesure</h2>
-      <div class="form-grid">
-        <div class="field">
-          <label>Nom de la mesure *</label>
-          <input type="text" id="inputNom" placeholder="ex: KPI Ventes Total" />
+    <header>
+      <div class="header-inner">
+        <button class="sb-toggle" id="sbToggle" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div style="font-size:.9rem;font-weight:600;color:var(--text-muted)">Administration</div>
+        <div class="header-actions">
+          <a href="index.html" class="btn-new" style="background:var(--surface2);color:var(--text-sub);border:1px solid var(--border)">
+            ← Bibliothèque
+          </a>
         </div>
-        <div class="field">
-          <label>Catégorie *</label>
-          <input type="text" id="inputCategorie" placeholder="ex: KPI, Finance, Date…" />
-        </div>
-        <div class="field full">
-          <label>Description *</label>
-          <textarea id="inputDesc" rows="2" placeholder="Ce que fait cette mesure…"></textarea>
-        </div>
-        <div class="field full">
-          <label>Code DAX *</label>
-          <textarea id="inputCode" rows="8" placeholder="Ventes Total =&#10;CALCULATE(&#10;    SUM(Ventes[Montant]),&#10;    ALLSELECTED()&#10;)"></textarea>
-        </div>
-        <div class="field full">
-          <label>Aperçu SVG <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></label>
-          <textarea id="inputSvg" rows="5" placeholder="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>&#10;  ...&#10;</svg>"></textarea>
-          <span class="field-hint">Collez le SVG du rendu visuel de la mesure</span>
-        </div>
-        <div class="field full">
-          <label>Aperçu en direct</label>
-          <div class="svg-live-preview" id="svgLivePreview">
-            <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.74rem">L'aperçu SVG apparaîtra ici</span>
+      </div>
+    </header>
+
+    <main style="max-width:780px">
+
+      <div class="admin-hero">
+        <h1>Gestion des <span class="accent-txt">Mesures</span></h1>
+        <p>Ajoutez et gérez vos mesures DAX avec aperçu SVG.</p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">✦ Nouvelle mesure</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label>Nom de la mesure *</label>
+            <input type="text" id="inputNom" placeholder="ex: KPI Ventes Total"/>
+          </div>
+          <div class="field">
+            <label>Catégorie *</label>
+            <input type="text" id="inputCategorie" placeholder="ex: KPI, Finance, Date…"/>
+          </div>
+          <div class="field full">
+            <label>Description *</label>
+            <textarea id="inputDesc" rows="2" placeholder="Ce que fait cette mesure…"></textarea>
+          </div>
+          <div class="field full">
+            <label>Code DAX *</label>
+            <textarea id="inputCode" rows="8" placeholder="Ventes Total =&#10;CALCULATE(&#10;    SUM(Ventes[Montant]),&#10;    ALLSELECTED()&#10;)"></textarea>
+          </div>
+          <div class="field full">
+            <label>Aperçu SVG <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></label>
+            <textarea id="inputSvg" rows="4" placeholder="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>&#10;  ...&#10;</svg>"></textarea>
+            <span class="field-hint">Collez le SVG du rendu visuel de la mesure</span>
+          </div>
+          <div class="field full">
+            <label>Aperçu en direct</label>
+            <div class="svg-live-preview" id="svgLivePreview">
+              <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.73rem">L'aperçu SVG apparaîtra ici</span>
+            </div>
           </div>
         </div>
+        <div class="form-footer">
+          <span class="form-msg" id="formMsg"></span>
+          <button class="btn-primary" id="btnAjouter">Ajouter la mesure</button>
+        </div>
       </div>
-      <div class="form-footer">
-        <span class="form-msg" id="formMsg"></span>
-        <button class="btn-primary" id="btnAjouter">Ajouter la mesure</button>
-      </div>
-    </div>
 
-    <div class="card">
-      <h2 class="card-title">✦ Mesures existantes</h2>
-      <div class="search-wrap" style="margin-bottom:1.5rem">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="adminSearch" placeholder="Filtrer les mesures…" />
+      <div class="card">
+        <h2 class="card-title">✦ Mesures existantes</h2>
+        <div style="position:relative;margin-bottom:1.25rem">
+          <svg style="position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:14px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="adminSearch" placeholder="Filtrer les mesures…" style="padding-left:2.2rem"/>
+        </div>
+        <div id="adminList" class="admin-list">
+          <div class="loading"><div class="spinner"></div><p>Chargement…</p></div>
+        </div>
       </div>
-      <div id="adminList" class="admin-list">
-        <div class="loading"><div class="spinner"></div><p>Chargement…</p></div>
-      </div>
-    </div>
 
-  </main>
+    </main>
+  </div>
 
-  <!-- Confirm delete modal -->
+  <!-- Confirm delete -->
   <div class="modal-overlay" id="deleteOverlay">
     <div class="modal modal-small">
       <div class="modal-header">
         <h2>Supprimer la mesure ?</h2>
         <button class="modal-close" id="deleteCancel">✕</button>
       </div>
-      <p style="color:var(--text-sub);margin-bottom:1.5rem;font-size:.87rem;line-height:1.6">Cette action est irréversible.</p>
-      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <p style="color:var(--text-sub);margin-bottom:1.5rem;font-size:.86rem;line-height:1.6">Cette action est irréversible.</p>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
         <button class="btn-ghost" id="deleteCancelBtn">Annuler</button>
         <button class="btn-danger" id="deleteConfirmBtn">Supprimer</button>
       </div>

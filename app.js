@@ -3,43 +3,81 @@
 let allFunctions = [];
 let activeCategory = 'all';
 
-// ---- Couleur déterministe par catégorie ----
+// ---- Palette de couleurs par catégorie ----
+const PALETTE = ['#5b6ef5','#7c3aed','#0891b2','#059669','#d97706','#db2777','#dc2626','#0284c7','#7c3aed','#4f46e5'];
 function categoryColor(cat) {
-  if (!cat) return '#7c5cfc';
-  const palette = [
-    '#7c5cfc', '#00d4aa', '#f59e0b', '#3b82f6',
-    '#ec4899', '#10b981', '#f97316', '#8b5cf6',
-    '#06b6d4', '#ef4444'
-  ];
-  let hash = 0;
-  for (let i = 0; i < cat.length; i++) {
-    hash = cat.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return palette[Math.abs(hash) % palette.length];
+  if (!cat) return PALETTE[0];
+  let h = 0;
+  for (let i = 0; i < cat.length; i++) h = cat.charCodeAt(i) + ((h << 5) - h);
+  return PALETTE[Math.abs(h) % PALETTE.length];
 }
 
-// ---- Chargement depuis Supabase ----
+// ---- Chargement ----
 async function loadFunctions() {
-  const grid = document.getElementById('grid');
-
   const { data, error } = await db
-    .from('fonctions')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .from('fonctions').select('*').order('created_at', { ascending: false });
 
   if (error) {
-    grid.innerHTML = `<div class="empty"><span class="empty-icon">⚠️</span><p>Erreur : ${error.message}</p></div>`;
+    document.getElementById('grid').innerHTML =
+      `<div class="empty"><span class="empty-icon">⚠️</span><p>${error.message}</p></div>`;
+    document.getElementById('carouselTrack').innerHTML = '';
     return;
   }
 
   allFunctions = data || [];
-  buildFilters();
+
+  // Stats
+  document.getElementById('statTotal').textContent = allFunctions.length;
+  const cats = [...new Set(allFunctions.map(f => f.categorie).filter(Boolean))];
+  document.getElementById('statCats').textContent = cats.length;
+
+  buildSidebarCats(cats);
+  buildFilters(cats);
+  buildCarousel();
   renderGrid(allFunctions);
 }
 
-// ---- Filtres ----
-function buildFilters() {
-  const cats = [...new Set(allFunctions.map(f => f.categorie).filter(Boolean))].sort();
+// ---- Sidebar catégories ----
+function buildSidebarCats(cats) {
+  const container = document.getElementById('sbCats');
+  if (!container) return;
+
+  // Bouton "Toutes"
+  const allBtn = document.createElement('button');
+  allBtn.className = 'sb-cat-btn active';
+  allBtn.dataset.cat = 'all';
+  allBtn.innerHTML = `
+    <span class="sb-cat-dot" style="background:var(--accent)"></span>
+    Toutes
+    <span class="sb-cat-count">${allFunctions.length}</span>`;
+  container.appendChild(allBtn);
+
+  cats.forEach(cat => {
+    const count = allFunctions.filter(f => f.categorie === cat).length;
+    const color = categoryColor(cat);
+    const btn = document.createElement('button');
+    btn.className = 'sb-cat-btn';
+    btn.dataset.cat = cat;
+    btn.innerHTML = `
+      <span class="sb-cat-dot" style="background:${color}"></span>
+      ${escHtml(cat)}
+      <span class="sb-cat-count">${count}</span>`;
+    container.appendChild(btn);
+  });
+
+  container.querySelectorAll('.sb-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.cat;
+      container.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      syncFilters();
+      applyFilters();
+    });
+  });
+}
+
+// ---- Filtres top ----
+function buildFilters(cats) {
   const container = document.getElementById('filters');
   container.innerHTML = `<button class="filter-btn active" data-cat="all">Toutes</button>`;
   cats.forEach(cat => {
@@ -52,16 +90,82 @@ function buildFilters() {
   container.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.cat;
-      container.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      syncFilters();
+      syncSidebar();
       applyFilters();
     });
   });
 }
 
+function syncFilters() {
+  document.querySelectorAll('#filters .filter-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === activeCategory));
+}
+function syncSidebar() {
+  document.querySelectorAll('#sbCats .sb-cat-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === activeCategory));
+}
+
+// ---- Carousel ----
+function buildCarousel() {
+  const track = document.getElementById('carouselTrack');
+  const recent = allFunctions.slice(0, 10);
+
+  if (recent.length === 0) {
+    track.innerHTML = `<div style="color:var(--text-muted);font-size:.84rem;padding:.5rem 0">Aucune mesure pour l'instant.</div>`;
+    return;
+  }
+
+  track.innerHTML = recent.map(fn => {
+    const color = categoryColor(fn.categorie);
+    return `
+      <div class="cc" data-id="${fn.id}">
+        <div class="cc-header" style="background:${color}">
+          <span class="cc-cat">${escHtml(fn.categorie || 'Général')}</span>
+          <span class="cc-badge">DAX</span>
+        </div>
+        <div class="cc-body">
+          <div class="cc-name">${escHtml(fn.nom)}</div>
+          <div class="cc-desc">${escHtml(fn.description || '')}</div>
+        </div>
+        <div class="cc-footer">
+          <span class="cc-date">${formatDate(fn.created_at)}</span>
+          <span class="cc-arrow">→</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  track.querySelectorAll('.cc').forEach(card => {
+    card.addEventListener('click', () => {
+      const fn = allFunctions.find(f => f.id === card.dataset.id);
+      if (fn) openModal(fn);
+    });
+  });
+}
+
+// Carousel navigation
+document.getElementById('carouselPrev').addEventListener('click', () => {
+  document.getElementById('carouselTrack').scrollBy({ left: -528, behavior: 'smooth' });
+});
+document.getElementById('carouselNext').addEventListener('click', () => {
+  document.getElementById('carouselTrack').scrollBy({ left: 528, behavior: 'smooth' });
+});
+
+// Sidebar mobile toggle
+const sbToggle = document.getElementById('sbToggle');
+const sidebar  = document.getElementById('sidebar');
+if (sbToggle && sidebar) {
+  sbToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+  document.addEventListener('click', e => {
+    if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== sbToggle) {
+      sidebar.classList.remove('open');
+    }
+  });
+}
+
 // ---- Rendu grille ----
 function renderGrid(functions) {
-  const grid = document.getElementById('grid');
+  const grid  = document.getElementById('grid');
   const count = document.getElementById('countDisplay');
   count.textContent = `${functions.length} mesure${functions.length !== 1 ? 's' : ''}`;
 
@@ -89,8 +193,7 @@ function renderGrid(functions) {
           <span class="fn-date">${formatDate(fn.created_at)}</span>
           <span class="fn-arrow">→</span>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 
   grid.querySelectorAll('.fn-card').forEach(card => {
@@ -113,7 +216,6 @@ function applyFilters() {
   );
   renderGrid(filtered);
 }
-
 document.getElementById('searchInput').addEventListener('input', applyFilters);
 
 // ---- Modal ----
@@ -127,11 +229,9 @@ function openModal(fn) {
   document.getElementById('modalCode').textContent = fn.code || '';
 
   const svgWrap = document.getElementById('svgPreviewWrap');
-  if (fn.svg_preview && fn.svg_preview.trim()) {
-    svgWrap.innerHTML = fn.svg_preview;
-  } else {
-    svgWrap.innerHTML = `<div class="svg-empty"><span>🎨</span>Aucun aperçu SVG pour cette mesure.</div>`;
-  }
+  svgWrap.innerHTML = fn.svg_preview && fn.svg_preview.trim()
+    ? fn.svg_preview
+    : `<div class="svg-empty"><span>🎨</span>Aucun aperçu SVG.</div>`;
 
   switchTab('dax');
 
@@ -142,34 +242,22 @@ function openModal(fn) {
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-// ---- Tabs ----
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => {
-    const id = 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1);
-    p.classList.toggle('active', p.id === id);
+    p.classList.toggle('active', p.id === 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
   });
 }
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-});
-
-// ---- Close ----
 document.getElementById('modalClose').addEventListener('click', closeModal);
-document.getElementById('modalOverlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
 // ---- Copier ----
 document.getElementById('copyBtn').addEventListener('click', () => {
-  const code = document.getElementById('modalCode').textContent;
-  navigator.clipboard.writeText(code).then(() => {
+  navigator.clipboard.writeText(document.getElementById('modalCode').textContent).then(() => {
     const btn = document.getElementById('copyBtn');
     btn.classList.add('copied');
     btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Copié !`;

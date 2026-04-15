@@ -1,83 +1,140 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CustomViz — Bibliothèque DAX · SVG</title>
-  <!-- Anti-flash : applique le thème sauvegardé avant le CSS -->
-  <script>
-    document.documentElement.setAttribute(
-      'data-theme',
-      localStorage.getItem('cv-theme') || 'dark'
-    );
-  </script>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('cv-theme') || 'light');</script>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
-      <a href="index.html" class="logo">
-        <div class="logo-mark">CV</div>
-        <span class="logo-name">CustomViz</span>
-        <span class="logo-badge">DAX · SVG</span>
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sb-logo">
+      <div class="sb-logo-mark">CV</div>
+      <span class="sb-logo-name">CustomViz</span>
+      <span class="sb-logo-badge">Beta</span>
+    </a>
+
+    <div class="sb-section">
+      <div class="sb-section-label">Navigation</div>
+      <a href="index.html" class="sb-nav-link active" id="sbBiblioLink">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Bibliothèque
       </a>
-      <nav>
-        <a href="index.html" class="active">Bibliothèque</a>
+      <a href="admin.html" class="sb-nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter
+      </a>
 
-        <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">
-          <!-- Soleil (affiché en mode light pour revenir au dark) -->
-          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/>
-            <line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/>
-            <line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-          <!-- Lune (affiché en mode dark pour passer au light) -->
-          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
+      <div class="sb-divider"></div>
+
+      <div class="sb-section-label">Catégories</div>
+      <div id="sbCats">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <div class="sb-footer">
+      <span class="sb-footer-label">Thème</span>
+      <button class="theme-toggle" id="themeToggle" aria-label="Changer le thème">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Page ── -->
+  <div class="page-wrap">
+
+    <header>
+      <div class="header-inner">
+        <button class="sb-toggle" id="sbToggle" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-
-        <a href="admin.html" class="btn-admin">+ Ajouter</a>
-      </nav>
-    </div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div class="hero-eyebrow">Power BI · DAX · SVG</div>
-      <h1>Bibliothèque de<br/><span class="accent-dax">Mesures DAX</span> <span class="accent">·</span> <span class="accent-svg">SVG</span></h1>
-      <p>Stockez, recherchez et réutilisez vos mesures DAX avec aperçu SVG intégré.</p>
-    </section>
-
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="searchInput" placeholder="Rechercher une mesure…" />
+        <div class="header-search">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Rechercher une mesure…"/>
+        </div>
+        <div class="header-actions">
+          <a href="admin.html" class="btn-new">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nouvelle mesure
+          </a>
+        </div>
       </div>
-      <div class="filters" id="filters">
-        <button class="filter-btn active" data-cat="all">Toutes</button>
-      </div>
-    </div>
+    </header>
 
-    <div class="stats-bar">
-      <span id="countDisplay">— mesures</span>
-    </div>
+    <main>
 
-    <div class="grid" id="grid">
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>Chargement des mesures…</p>
+      <!-- Page head + stats -->
+      <div class="page-head">
+        <div>
+          <div class="page-head-title">Bibliothèque DAX · SVG</div>
+          <div class="page-head-sub">Toutes vos mesures Power BI au même endroit</div>
+        </div>
+        <div class="page-stats">
+          <div class="stat-card">
+            <div class="stat-icon indigo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            </div>
+            <div>
+              <div class="stat-val" id="statTotal">—</div>
+              <div class="stat-lbl">Mesures</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12h3m12 0h3M12 3v3m0 12v3"/></svg>
+            </div>
+            <div>
+              <div class="stat-val" id="statCats">—</div>
+              <div class="stat-lbl">Catégories</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </main>
+
+      <!-- Carousel -->
+      <section class="carousel-section">
+        <div class="section-header">
+          <div class="section-title">Récentes</div>
+          <div class="carousel-btns">
+            <button class="carousel-btn" id="carouselPrev" aria-label="Précédent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="carousel-btn" id="carouselNext" aria-label="Suivant">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="carousel-outer">
+          <div class="carousel-track" id="carouselTrack">
+            <div class="loading" style="padding:2rem 1rem">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Full library -->
+      <section>
+        <div class="library-header">
+          <div class="section-title">Toutes les mesures</div>
+          <div class="filters" id="filters">
+            <button class="filter-btn active" data-cat="all">Toutes</button>
+          </div>
+        </div>
+        <div class="stats-bar"><span id="countDisplay">— mesures</span></div>
+        <div class="grid" id="grid">
+          <div class="loading"><div class="spinner"></div><p>Chargement…</p></div>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- /page-wrap -->
 
   <!-- Modal -->
   <div class="modal-overlay" id="modalOverlay">
@@ -90,12 +147,10 @@
         <button class="modal-close" id="modalClose">✕</button>
       </div>
       <p class="modal-desc" id="modalDesc"></p>
-
       <div class="modal-tabs">
         <button class="tab-btn active" data-tab="dax"><span class="tab-dot"></span>Mesure DAX</button>
         <button class="tab-btn" data-tab="svg"><span class="tab-dot"></span>Aperçu SVG</button>
       </div>
-
       <div class="tab-panel active" id="tabDax">
         <div class="code-block">
           <div class="code-header">
@@ -108,7 +163,6 @@
           <pre id="modalCode"></pre>
         </div>
       </div>
-
       <div class="tab-panel" id="tabSvg">
         <div class="svg-preview-wrap" id="svgPreviewWrap"></div>
       </div>

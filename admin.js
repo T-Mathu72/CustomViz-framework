@@ -131,4 +131,15 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// ---- Mobile sidebar ----
+const sbToggle = document.getElementById('sbToggle');
+const sidebar  = document.getElementById('sidebar');
+if (sbToggle && sidebar) {
+  sbToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+  document.addEventListener('click', e => {
+    if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== sbToggle)
+      sidebar.classList.remove('open');
+  });
+}
+
 loadAdminList();
