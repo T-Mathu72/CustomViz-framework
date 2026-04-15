@@ -20,7 +20,6 @@ async function loadFunctions() {
   if (error) {
     document.getElementById('grid').innerHTML =
       `<div class="empty"><span class="empty-icon">⚠️</span><p>${error.message}</p></div>`;
-    document.getElementById('carouselTrack').innerHTML = '';
     return;
   }
 
@@ -33,7 +32,37 @@ async function loadFunctions() {
 
   buildSidebarCats(cats);
   buildFilters(cats);
-  renderGrid(allFunctions);
+  buildImageSection();
+  renderGrid(allFunctions.filter(f => f.categorie !== 'Carte KPI'));
+}
+
+// ---- Cartes SVG (images) ----
+function buildImageSection() {
+  const cards = allFunctions.filter(f => f.categorie === 'Carte KPI');
+  const section = document.getElementById('imageSection');
+  const container = document.getElementById('imageCards');
+  if (!section || !container) return;
+
+  if (cards.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  container.innerHTML = cards.map(fn => `
+    <div class="img-card" data-id="${fn.id}">
+      <div class="img-card-preview">
+        ${fn.svg_preview ? stripSvgDims(fn.svg_preview) : '<div class="svg-empty" style="padding:1rem">Aucun aperçu SVG.</div>'}
+      </div>
+      <div class="img-card-footer">
+        <span class="img-card-name">${escHtml(fn.nom)}</span>
+        <span class="img-card-arrow">→</span>
+      </div>
+    </div>`).join('');
+
+  container.querySelectorAll('.img-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const fn = allFunctions.find(f => f.id === card.dataset.id);
+      if (fn) openModal(fn);
+    });
+  });
 }
 
 // ---- Sidebar catégories ----
