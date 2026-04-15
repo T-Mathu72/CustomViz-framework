@@ -63,7 +63,7 @@ html:not([data-theme="dark"]) {
 
 /* ===== RESET ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 body {
   background: var(--bg);
   color: var(--text);
@@ -71,6 +71,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   display: flex;
+  overflow-x: hidden;
 }
 
 /* ===== SIDEBAR ===== */
