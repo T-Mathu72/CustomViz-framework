@@ -2,6 +2,7 @@
 
 let allFunctions = [];
 let activeCategory = 'all';
+let activeView = 'table'; // 'table' | 'carte' | 'html'
 
 // ---- Palette de couleurs par catégorie ----
 const PALETTE = ['#5b6ef5','#7c3aed','#0891b2','#059669','#d97706','#db2777','#dc2626','#0284c7','#7c3aed','#4f46e5'];
@@ -33,11 +34,12 @@ async function loadFunctions() {
   buildSidebarCats(cats);
   buildFilters(cats);
   buildImageSection();
-  renderGrid(allFunctions.filter(f => f.categorie !== 'Carte'));
+  renderGrid(allFunctions.filter(f => f.categorie !== 'Carte' && f.categorie !== 'HTML'));
 }
 
-// ---- Vue Table / Carte ----
+// ---- Vue Table / Carte / HTML ----
 function switchView(type) {
+  activeView = type;
   const tableSection = document.getElementById('tableSection');
   const imageSection = document.getElementById('imageSection');
   if (type === 'carte') {
@@ -46,6 +48,9 @@ function switchView(type) {
   } else {
     if (tableSection) tableSection.style.display = '';
     if (imageSection) imageSection.style.display = 'none';
+    // Titre de section
+    const titleEl = tableSection && tableSection.querySelector('.section-title');
+    if (titleEl) titleEl.textContent = type === 'html' ? 'Visuels HTML' : 'Toutes les mesures';
   }
 }
 
@@ -81,9 +86,10 @@ function buildSidebarCats(cats) {
   if (!container) return;
   container.innerHTML = '';
 
-  const tableCats = cats.filter(c => c !== 'Carte');
+  const tableCats = cats.filter(c => c !== 'Carte' && c !== 'HTML');
   const hasCartes  = cats.includes('Carte');
-  const tableCount = allFunctions.filter(f => f.categorie !== 'Carte').length;
+  const hasHtml    = cats.includes('HTML');
+  const tableCount = allFunctions.filter(f => f.categorie !== 'Carte' && f.categorie !== 'HTML').length;
 
   // ── Super-catégorie TABLE ──
   container.insertAdjacentHTML('beforeend',
@@ -128,6 +134,20 @@ function buildSidebarCats(cats) {
     container.appendChild(carteBtn);
   }
 
+  // ── Super-catégorie HTML ──
+  if (hasHtml) {
+    const htmlCount = allFunctions.filter(f => f.categorie === 'HTML').length;
+    container.insertAdjacentHTML('beforeend',
+      '<div class="sb-type-label" style="margin-top:.9rem">HTML</div>');
+
+    const htmlToutesBtn = document.createElement('button');
+    htmlToutesBtn.className = 'sb-cat-btn';
+    htmlToutesBtn.dataset.cat = 'all-html';
+    htmlToutesBtn.dataset.type = 'html';
+    htmlToutesBtn.innerHTML = `<span class="sb-cat-dot" style="background:#f59e0b"></span>Toutes<span class="sb-cat-count">${htmlCount}</span>`;
+    container.appendChild(htmlToutesBtn);
+  }
+
   // Handlers
   container.querySelectorAll('.sb-cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -135,6 +155,10 @@ function buildSidebarCats(cats) {
       btn.classList.add('active');
       if (btn.dataset.type === 'carte') {
         switchView('carte');
+      } else if (btn.dataset.type === 'html') {
+        switchView('html');
+        activeCategory = 'all';
+        applyFilters();
       } else {
         switchView('table');
         activeCategory = btn.dataset.cat;
@@ -148,7 +172,7 @@ function buildSidebarCats(cats) {
 // ---- Filtres top ----
 function buildFilters(cats) {
   const container = document.getElementById('filters');
-  const tableCats = cats.filter(c => c !== 'Carte');
+  const tableCats = cats.filter(c => c !== 'Carte' && c !== 'HTML');
   container.innerHTML = `<button class="filter-btn active" data-cat="all">Toutes</button>`;
   tableCats.forEach(cat => {
     const btn = document.createElement('button');
@@ -240,8 +264,13 @@ function renderGrid(functions) {
 // ---- Filtrage ----
 function applyFilters() {
   const q = document.getElementById('searchInput').value.toLowerCase();
-  let filtered = allFunctions.filter(f => f.categorie !== 'Carte');
-  if (activeCategory !== 'all') filtered = filtered.filter(f => f.categorie === activeCategory);
+  let filtered;
+  if (activeView === 'html') {
+    filtered = allFunctions.filter(f => f.categorie === 'HTML');
+  } else {
+    filtered = allFunctions.filter(f => f.categorie !== 'Carte' && f.categorie !== 'HTML');
+    if (activeCategory !== 'all') filtered = filtered.filter(f => f.categorie === activeCategory);
+  }
   if (q) filtered = filtered.filter(f =>
     f.nom.toLowerCase().includes(q) ||
     (f.description || '').toLowerCase().includes(q) ||
