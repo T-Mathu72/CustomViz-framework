@@ -19,17 +19,17 @@ html:not([data-theme="dark"]) {
   --text:      #0d1729;
   --text-muted:#6374a0;
   --text-sub:  #3a4d70;
-  --accent:    #5b6ef5;
+  --accent:    #ab0000;
   --accent-fg: #ffffff;
-  --highlight: #5b6ef5;
-  --dax:       #7c3aed;
+  --highlight: #ab0000;
+  --dax:       #7a0000;
   --svg-col:   #0891b2;
   --danger:    #dc2626;
   --code-bg:   #1a2336;
   --shadow-xs: 0 1px 4px rgba(13,23,41,.06);
   --shadow-sm: 0 2px 10px rgba(13,23,41,.08);
   --shadow-md: 0 8px 30px rgba(13,23,41,.13);
-  --sb-link:   #5b6ef5;
+  --sb-link:   #ab0000;
 }
 
 /* ── Dark ── */
@@ -43,17 +43,17 @@ html:not([data-theme="dark"]) {
   --text:      #e2eaf6;
   --text-muted:#546080;
   --text-sub:  #8097b8;
-  --accent:    #6366f1;
+  --accent:    #cc1111;
   --accent-fg: #ffffff;
-  --highlight: #818cf8;
-  --dax:       #a78bfa;
+  --highlight: #e05555;
+  --dax:       #f08080;
   --svg-col:   #2ee8c5;
   --danger:    #f04a5a;
   --code-bg:   #050810;
   --shadow-xs: 0 1px 4px rgba(0,0,0,.4);
   --shadow-sm: 0 2px 10px rgba(0,0,0,.5);
   --shadow-md: 0 8px 30px rgba(0,0,0,.6);
-  --sb-link:   #818cf8;
+  --sb-link:   #e05555;
 }
 
 /* ── Theme transition ── */
@@ -99,13 +99,8 @@ body {
   flex-shrink: 0;
 }
 .sb-logo-mark {
-  width: 26px; height: 26px;
-  background: var(--accent);
-  border-radius: var(--radius-xs);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono);
-  font-size: .6rem; font-weight: 800;
-  color: var(--accent-fg);
+  width: 32px; height: 32px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 .sb-logo-name {
@@ -174,7 +169,7 @@ body {
 }
 .sb-nav-link svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .7; }
 .sb-nav-link:hover { background: var(--surface2); color: var(--text); }
-.sb-nav-link.active { background: rgba(91,110,245,.1); color: var(--sb-link); font-weight: 600; }
+.sb-nav-link.active { background: rgba(171,0,0,.1); color: var(--sb-link); font-weight: 600; }
 [data-theme="dark"] .sb-nav-link.active { background: rgba(99,102,241,.12); }
 .sb-nav-link.active svg { opacity: 1; }
 
@@ -281,12 +276,6 @@ html:not([data-theme="dark"]) header { background: rgba(255,255,255,.95); backdr
   flex: 1;
   max-width: 380px;
 }
-.header-search .search-icon {
-  position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
-  width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;
-}
-.header-search.has-value .search-icon,
-.header-search.focused .search-icon { display: none; }
 .header-search input {
   width: 100%;
   background: var(--surface2);
@@ -295,13 +284,13 @@ html:not([data-theme="dark"]) header { background: rgba(255,255,255,.95); backdr
   color: var(--text);
   font-family: var(--font-ui);
   font-size: .84rem;
-  padding: .5rem .9rem .5rem 2.9rem;
+  padding: .5rem .9rem;
   outline: none;
   transition: border-color .16s, box-shadow .16s;
 }
 .header-search input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(91,110,245,.12);
+  box-shadow: 0 0 0 3px rgba(171,0,0,.12);
   background: var(--surface);
 }
 .header-search input::placeholder { color: var(--text-muted); }
@@ -361,10 +350,10 @@ main { padding: 2rem 2rem 5rem; flex: 1; }
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.stat-icon.indigo { background: rgba(91,110,245,.12); color: var(--accent); }
-.stat-icon.purple { background: rgba(124,58,237,.12); color: var(--dax); }
+.stat-icon.indigo { background: rgba(171,0,0,.12); color: var(--accent); }
+.stat-icon.purple { background: rgba(122,0,0,.12); color: var(--dax); }
 [data-theme="dark"] .stat-icon.indigo { background: rgba(99,102,241,.15); }
-[data-theme="dark"] .stat-icon.purple { background: rgba(167,139,250,.15); }
+[data-theme="dark"] .stat-icon.purple { background: rgba(240,128,128,.15); }
 .stat-icon svg { width: 16px; }
 .stat-val {
   font-size: 1.15rem; font-weight: 800;
@@ -758,7 +747,7 @@ input[type="text"], textarea {
 }
 textarea { padding-left: .85rem; font-family: var(--font-mono); font-size: .8rem; resize: vertical; line-height: 1.62; }
 input[type="text"]:focus, textarea:focus {
-  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,110,245,.12); background: var(--surface);
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(171,0,0,.12); background: var(--surface);
 }
 [data-theme="dark"] input[type="text"]:focus,
 [data-theme="dark"] textarea:focus { box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
