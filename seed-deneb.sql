@@ -3,7 +3,7 @@
 --  Exécutez ce script dans l'éditeur SQL de votre projet Supabase
 -- ============================================================
 
-INSERT INTO fonctions (nom, categorie, description, code, svg_preview, statut) VALUES
+INSERT INTO fonctions (nom, categorie, description, code, preview, statut) VALUES
 
 -- 1. Bar Chart Horizontal
 ('Bar Chart Horizontal', 'Deneb',
@@ -34,7 +34,8 @@ $${
     ]
   }
 }$$,
-NULL, 'approved'),
+'<svg viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="7"  width="88" height="9" rx="2" fill="#AB0000"/><rect x="18" y="20" width="64" height="9" rx="2" fill="#E57373"/><rect x="18" y="33" width="48" height="9" rx="2" fill="#E57373"/><rect x="18" y="46" width="36" height="9" rx="2" fill="#E57373"/><rect x="18" y="59" width="24" height="9" rx="2" fill="#E57373"/></svg>',
+'approved'),
 
 -- 2. Line Chart Temporel
 ('Line Chart Temporel', 'Deneb',
@@ -70,7 +71,8 @@ $${
     }
   ]
 }$$,
-NULL, 'approved'),
+'<svg viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg"><path d="M8,58 L28,44 L48,50 L68,30 L88,36 L112,14 L112,66 L8,66 Z" fill="#AB0000" opacity="0.15"/><polyline points="8,58 28,44 48,50 68,30 88,36 112,14" fill="none" stroke="#AB0000" stroke-width="2.5" stroke-linejoin="round"/><circle cx="8"   cy="58" r="3" fill="#AB0000"/><circle cx="28"  cy="44" r="3" fill="#AB0000"/><circle cx="48"  cy="50" r="3" fill="#AB0000"/><circle cx="68"  cy="30" r="3" fill="#AB0000"/><circle cx="88"  cy="36" r="3" fill="#AB0000"/><circle cx="112" cy="14" r="3" fill="#AB0000"/></svg>',
+'approved'),
 
 -- 3. Scatter Plot
 ('Scatter Plot', 'Deneb',
@@ -110,7 +112,8 @@ $${
     }
   ]
 }$$,
-NULL, 'approved'),
+'<svg viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg"><circle cx="22" cy="52" r="5" fill="#AB0000" opacity="0.75"/><circle cx="40" cy="38" r="5" fill="#E57373" opacity="0.75"/><circle cx="55" cy="20" r="5" fill="#B71C1C" opacity="0.75"/><circle cx="70" cy="44" r="5" fill="#AB0000" opacity="0.75"/><circle cx="85" cy="28" r="5" fill="#E57373" opacity="0.75"/><circle cx="100" cy="55" r="5" fill="#B71C1C" opacity="0.75"/><circle cx="35" cy="60" r="5" fill="#AB0000" opacity="0.75"/><circle cx="92" cy="14" r="5" fill="#E57373" opacity="0.75"/></svg>',
+'approved'),
 
 -- 4. Donut / Arc Chart
 ('Donut Chart', 'Deneb',
@@ -156,7 +159,8 @@ $${
   ],
   "view": { "stroke": null }
 }$$,
-NULL, 'approved'),
+'<svg viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg"><path d="M35,5 A30,30 0 0,1 62,50 L53,44 A20,20 0 0,0 35,15 Z" fill="#AB0000"/><path d="M62,50 A30,30 0 0,1 10,55 L18,49 A20,20 0 0,0 53,44 Z" fill="#E57373"/><path d="M10,55 A30,30 0 0,1 35,5 L35,15 A20,20 0 0,0 18,49 Z" fill="#FFCDD2"/><circle cx="35" cy="35" r="15" fill="white"/></svg>',
+'approved'),
 
 -- 5. Heatmap Matrice
 ('Heatmap Matrice', 'Deneb',
@@ -189,7 +193,8 @@ $${
     ]
   }
 }$$,
-NULL, 'approved'),
+'<svg viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg"><rect x="4"  y="4"  width="25" height="18" rx="1" fill="#FFCDD2"/><rect x="32" y="4"  width="25" height="18" rx="1" fill="#AB0000"/><rect x="60" y="4"  width="25" height="18" rx="1" fill="#E57373"/><rect x="88" y="4"  width="28" height="18" rx="1" fill="#B71C1C"/><rect x="4"  y="26" width="25" height="18" rx="1" fill="#E57373"/><rect x="32" y="26" width="25" height="18" rx="1" fill="#FFCDD2"/><rect x="60" y="26" width="25" height="18" rx="1" fill="#AB0000"/><rect x="88" y="26" width="28" height="18" rx="1" fill="#FFCDD2"/><rect x="4"  y="48" width="25" height="18" rx="1" fill="#B71C1C"/><rect x="32" y="48" width="25" height="18" rx="1" fill="#E57373"/><rect x="60" y="48" width="25" height="18" rx="1" fill="#FFCDD2"/><rect x="88" y="48" width="28" height="18" rx="1" fill="#E57373"/></svg>',
+'approved'),
 
 -- 6. Bullet Chart Vega-Lite
 ('Bullet Chart Deneb', 'Deneb',
@@ -229,4 +234,11 @@ $${
     ]
   }
 }$$,
-NULL, 'approved');
+'<svg viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="6"  width="100" height="10" rx="1" fill="#E5E7EB"/><rect x="4" y="9"  width="72"  height="4"  rx="1" fill="#AB0000"/><line x1="104" y1="4"  x2="104" y2="18" stroke="#1F2937" stroke-width="2.5"/><rect x="4" y="22" width="100" height="10" rx="1" fill="#E5E7EB"/><rect x="4" y="25" width="58"  height="4"  rx="1" fill="#AB0000"/><line x1="104" y1="20" x2="104" y2="34" stroke="#1F2937" stroke-width="2.5"/><rect x="4" y="38" width="100" height="10" rx="1" fill="#E5E7EB"/><rect x="4" y="41" width="85"  height="4"  rx="1" fill="#AB0000"/><line x1="104" y1="36" x2="104" y2="50" stroke="#1F2937" stroke-width="2.5"/><rect x="4" y="54" width="100" height="10" rx="1" fill="#E5E7EB"/><rect x="4" y="57" width="44"  height="4"  rx="1" fill="#AB0000"/><line x1="104" y1="52" x2="104" y2="66" stroke="#1F2937" stroke-width="2.5"/></svg>',
+'approved')
+ON CONFLICT (nom) DO UPDATE SET
+  categorie   = EXCLUDED.categorie,
+  description = EXCLUDED.description,
+  code        = EXCLUDED.code,
+  preview     = EXCLUDED.preview,
+  statut      = EXCLUDED.statut;

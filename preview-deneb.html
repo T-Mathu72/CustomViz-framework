@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Preview — Visuels DENEB</title>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f5f5f7;
+      color: #1a1a1a;
+      padding: 32px 24px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #111;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 36px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 20px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .card-header .num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      background: #AB0000;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .card-header .info h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .card-header .info p {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .schema-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      background: #f3f0ff;
+      color: #6d28d9;
+      border-radius: 20px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      align-self: center;
+    }
+
+    .card-body {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 220px;
+    }
+
+    .card-body > div {
+      width: 100%;
+    }
+
+    .card-footer {
+      padding: 10px 20px 14px;
+      border-top: 1px solid #f5f5f5;
+    }
+
+    .fields {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .field-tag {
+      font-size: 11px;
+      font-family: 'Consolas', monospace;
+      background: #fafafa;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+      padding: 2px 8px;
+      color: #333;
+    }
+
+    .field-tag span {
+      color: #AB0000;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Visuels DENEB — Aperçu</h1>
+<p class="subtitle">6 templates Vega-Lite · données d'exemple · CustomViz Framework</p>
+
+<div class="grid">
+
+  <!-- 1. Bar Chart Horizontal -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">1</div>
+      <div class="info">
+        <h2>Bar Chart Horizontal</h2>
+        <p>Barres horizontales avec mise en évidence du max</p>
+      </div>
+      <span class="schema-badge">nominal · quantitative</span>
+    </div>
+    <div class="card-body"><div id="bar-chart"></div></div>
+    <div class="card-footer">
+      <div class="fields">
+        <div class="field-tag"><span>category</span> text</div>
+        <div class="field-tag"><span>value</span> number</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Line Chart Temporel -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">2</div>
+      <div class="info">
+        <h2>Line Chart Temporel</h2>
+        <p>Courbe d'évolution avec aire et points</p>
+      </div>
+      <span class="schema-badge">temporal · quantitative</span>
+    </div>
+    <div class="card-body"><div id="line-chart"></div></div>
+    <div class="card-footer">
+      <div class="fields">
+        <div class="field-tag"><span>date</span> ISO date</div>
+        <div class="field-tag"><span>value</span> number</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Scatter Plot -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">3</div>
+      <div class="info">
+        <h2>Scatter Plot</h2>
+        <p>Nuage de points avec étiquettes et couleur par groupe</p>
+      </div>
+      <span class="schema-badge">x · y · category · label</span>
+    </div>
+    <div class="card-body"><div id="scatter-chart"></div></div>
+    <div class="card-footer">
+      <div class="fields">
+        <div class="field-tag"><span>x</span> number</div>
+        <div class="field-tag"><span>y</span> number</div>
+        <div class="field-tag"><span>category</span> text</div>
+        <div class="field-tag"><span>label</span> text</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Donut Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">4</div>
+      <div class="info">
+        <h2>Donut Chart</h2>
+        <p>Graphique en anneau avec valeurs positionnées</p>
+      </div>
+      <span class="schema-badge">nominal · quantitative</span>
+    </div>
+    <div class="card-body"><div id="donut-chart"></div></div>
+    <div class="card-footer">
+      <div class="fields">
+        <div class="field-tag"><span>category</span> text</div>
+        <div class="field-tag"><span>value</span> number</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Heatmap -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">5</div>
+      <div class="info">
+        <h2>Heatmap Matrice</h2>
+        <p>Carte de chaleur sur deux dimensions ordinales</p>
+      </div>
+      <span class="schema-badge">row · col · value</span>
+    </div>
+    <div class="card-body"><div id="heatmap-chart"></div></div>
+    <div class="card-footer">
+      <div class="fields">
+        <div class="field-tag"><span>row</span> text</div>
+        <div class="field-tag"><span>col</span> text</div>
+        <div class="field-tag"><span>value</span> number</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Bullet Chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">6</div>
+      <div class="info">
+        <h2>Bullet Chart</h2>
+        <p>Réalisé vs objectif, facetté par indicateur</p>
+      </div>
+      <span class="schema-badge">label · value · target</span>
+    </div>
+    <div class="card-body"><div id="bullet-chart"></div></div>
+    <div class="card-footer">
+      <div class="fields">
+        <div class="field-tag"><span>label</span> text</div>
+        <div class="field-tag"><span>value</span> number</div>
+        <div class="field-tag"><span>target</span> number</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const OPTS = { actions: false, renderer: "svg" };
+
+// ── 1. Bar Chart Horizontal ────────────────────────────────────────────────
+vegaEmbed("#bar-chart", {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 180,
+  "data": { "values": [
+    {"category": "Paris",    "value": 8400},
+    {"category": "Lyon",     "value": 5200},
+    {"category": "Bordeaux", "value": 3900},
+    {"category": "Nantes",   "value": 3100},
+    {"category": "Toulouse", "value": 2700}
+  ]},
+  "mark": { "type": "bar", "cornerRadiusEnd": 4, "tooltip": true },
+  "encoding": {
+    "y": { "field": "category", "type": "nominal", "sort": "-x", "axis": { "labelLimit": 150, "title": null } },
+    "x": { "field": "value", "type": "quantitative", "axis": { "title": null, "grid": false } },
+    "color": {
+      "condition": { "test": "datum.value === 8400", "value": "#AB0000" },
+      "value": "#E57373"
+    },
+    "tooltip": [
+      { "field": "category", "title": "Catégorie" },
+      { "field": "value", "title": "Valeur", "format": ",.0f" }
+    ]
+  }
+}, OPTS);
+
+// ── 2. Line Chart Temporel ─────────────────────────────────────────────────
+vegaEmbed("#line-chart", {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 180,
+  "data": { "values": [
+    {"date": "2024-01-01", "value": 1200},
+    {"date": "2024-02-01", "value": 1850},
+    {"date": "2024-03-01", "value": 1600},
+    {"date": "2024-04-01", "value": 2100},
+    {"date": "2024-05-01", "value": 1900},
+    {"date": "2024-06-01", "value": 2450},
+    {"date": "2024-07-01", "value": 2800}
+  ]},
+  "layer": [
+    {
+      "mark": { "type": "area", "line": true, "opacity": 0.15, "color": "#AB0000" },
+      "encoding": {
+        "x": { "field": "date", "type": "temporal", "axis": { "title": null, "format": "%b %Y" } },
+        "y": { "field": "value", "type": "quantitative", "axis": { "title": null } }
+      }
+    },
+    {
+      "mark": { "type": "line", "color": "#AB0000", "strokeWidth": 2.5 },
+      "encoding": {
+        "x": { "field": "date", "type": "temporal" },
+        "y": { "field": "value", "type": "quantitative" }
+      }
+    },
+    {
+      "mark": { "type": "point", "color": "#AB0000", "filled": true, "size": 60 },
+      "encoding": {
+        "x": { "field": "date", "type": "temporal" },
+        "y": { "field": "value", "type": "quantitative" },
+        "tooltip": [
+          { "field": "date", "type": "temporal", "title": "Date", "format": "%d/%m/%Y" },
+          { "field": "value", "title": "Valeur", "format": ",.0f" }
+        ]
+      }
+    }
+  ]
+}, OPTS);
+
+// ── 3. Scatter Plot ────────────────────────────────────────────────────────
+vegaEmbed("#scatter-chart", {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 180,
+  "data": { "values": [
+    {"x": 12.5, "y": 8.1,  "category": "Groupe A", "label": "Paris"},
+    {"x": 9.3,  "y": 14.2, "category": "Groupe A", "label": "Lyon"},
+    {"x": 18.7, "y": 6.5,  "category": "Groupe B", "label": "Bordeaux"},
+    {"x": 5.2,  "y": 11.8, "category": "Groupe B", "label": "Nantes"},
+    {"x": 15.1, "y": 17.3, "category": "Groupe C", "label": "Toulouse"},
+    {"x": 7.8,  "y": 4.9,  "category": "Groupe C", "label": "Rennes"},
+    {"x": 20.4, "y": 13.6, "category": "Groupe A", "label": "Marseille"}
+  ]},
+  "layer": [
+    {
+      "mark": { "type": "point", "filled": true, "size": 90, "opacity": 0.75 },
+      "encoding": {
+        "x": { "field": "x", "type": "quantitative", "axis": { "title": "Axe X", "grid": true } },
+        "y": { "field": "y", "type": "quantitative", "axis": { "title": "Axe Y", "grid": true } },
+        "color": { "field": "category", "type": "nominal", "legend": { "title": null } },
+        "tooltip": [
+          { "field": "label", "title": "Label" },
+          { "field": "x", "title": "X", "format": ",.2f" },
+          { "field": "y", "title": "Y", "format": ",.2f" }
+        ]
+      }
+    },
+    {
+      "mark": { "type": "text", "dy": -10, "fontSize": 10, "opacity": 0.7 },
+      "encoding": {
+        "x": { "field": "x", "type": "quantitative" },
+        "y": { "field": "y", "type": "quantitative" },
+        "text": { "field": "label", "type": "nominal" }
+      }
+    }
+  ]
+}, OPTS);
+
+// ── 4. Donut Chart ─────────────────────────────────────────────────────────
+vegaEmbed("#donut-chart", {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": 260,
+  "height": 200,
+  "data": { "values": [
+    {"category": "Produit A", "value": 4200},
+    {"category": "Produit B", "value": 2800},
+    {"category": "Produit C", "value": 1900},
+    {"category": "Produit D", "value": 1100}
+  ]},
+  "layer": [
+    {
+      "mark": { "type": "arc", "innerRadius": 60, "outerRadius": 90, "stroke": "white", "strokeWidth": 2, "tooltip": true },
+      "encoding": {
+        "theta": { "field": "value", "type": "quantitative" },
+        "color": {
+          "field": "category", "type": "nominal",
+          "legend": { "title": null, "orient": "right" },
+          "scale": { "range": ["#AB0000","#E57373","#FFCDD2","#B71C1C"] }
+        },
+        "tooltip": [
+          { "field": "category", "title": "Catégorie" },
+          { "field": "value", "title": "Valeur", "format": ",.0f" }
+        ]
+      }
+    },
+    {
+      "mark": { "type": "text", "radius": 108, "fontSize": 11 },
+      "encoding": {
+        "theta": { "field": "value", "type": "quantitative", "stack": true },
+        "text": { "field": "value", "type": "quantitative", "format": ",.0f" }
+      }
+    }
+  ],
+  "view": { "stroke": null }
+}, OPTS);
+
+// ── 5. Heatmap ─────────────────────────────────────────────────────────────
+vegaEmbed("#heatmap-chart", {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 180,
+  "data": { "values": [
+    {"row": "Lun", "col": "S1", "value": 4.2}, {"row": "Lun", "col": "S2", "value": 7.1}, {"row": "Lun", "col": "S3", "value": 2.8}, {"row": "Lun", "col": "S4", "value": 9.3},
+    {"row": "Mar", "col": "S1", "value": 6.5}, {"row": "Mar", "col": "S2", "value": 1.9}, {"row": "Mar", "col": "S3", "value": 8.7}, {"row": "Mar", "col": "S4", "value": 3.4},
+    {"row": "Mer", "col": "S1", "value": 3.1}, {"row": "Mer", "col": "S2", "value": 9.8}, {"row": "Mer", "col": "S3", "value": 5.5}, {"row": "Mer", "col": "S4", "value": 7.2},
+    {"row": "Jeu", "col": "S1", "value": 8.4}, {"row": "Jeu", "col": "S2", "value": 4.6}, {"row": "Jeu", "col": "S3", "value": 1.2}, {"row": "Jeu", "col": "S4", "value": 6.8},
+    {"row": "Ven", "col": "S1", "value": 2.7}, {"row": "Ven", "col": "S2", "value": 6.3}, {"row": "Ven", "col": "S3", "value": 9.1}, {"row": "Ven", "col": "S4", "value": 4.5}
+  ]},
+  "mark": { "type": "rect", "tooltip": true },
+  "encoding": {
+    "x": { "field": "col", "type": "ordinal", "axis": { "title": null, "labelAngle": -35 } },
+    "y": { "field": "row", "type": "ordinal", "axis": { "title": null } },
+    "color": {
+      "field": "value", "type": "quantitative",
+      "legend": { "title": null },
+      "scale": { "scheme": "reds" }
+    },
+    "tooltip": [
+      { "field": "row",   "title": "Ligne" },
+      { "field": "col",   "title": "Colonne" },
+      { "field": "value", "title": "Valeur", "format": ",.2f" }
+    ]
+  }
+}, OPTS);
+
+// ── 6. Bullet Chart ────────────────────────────────────────────────────────
+vegaEmbed("#bullet-chart", {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": { "values": [
+    {"label": "Chiffre d'affaires", "value": 72, "target": 100},
+    {"label": "Marge brute",        "value": 58, "target":  80},
+    {"label": "NPS",                "value": 43, "target":  60},
+    {"label": "Satisfaction",       "value": 85, "target":  90}
+  ]},
+  "facet": {
+    "row": { "field": "label", "type": "ordinal", "header": { "title": null } }
+  },
+  "spec": {
+    "width": 300,
+    "height": 20,
+    "layer": [
+      {
+        "mark": { "type": "bar", "color": "#E5E7EB", "height": 20 },
+        "encoding": {
+          "x": { "field": "target", "type": "quantitative", "axis": { "title": null } }
+        }
+      },
+      {
+        "mark": { "type": "bar", "color": "#AB0000", "height": 10 },
+        "encoding": {
+          "x": { "field": "value", "type": "quantitative" }
+        }
+      },
+      {
+        "mark": { "type": "tick", "color": "#1F2937", "thickness": 3, "size": 22 },
+        "encoding": {
+          "x": { "field": "target", "type": "quantitative" }
+        }
+      }
+    ]
+  }
+}, OPTS);
+</script>
+
+</body>
+</html>

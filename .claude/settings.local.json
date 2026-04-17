@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node seed.js)"
+      "Bash(node seed.js)",
+      "Bash(start \"\" \"c:\\\\Users\\\\ThéoMATHURIN\\\\Downloads\\\\files\\\\CustomViz-framework\\\\preview-deneb.html\")"
     ]
   }
 }

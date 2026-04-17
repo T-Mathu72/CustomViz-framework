@@ -152,7 +152,7 @@
       const sous_categorie = document.getElementById('inputSousCategorie').value.trim() || null;
       const description = document.getElementById('inputDesc').value.trim();
       const code        = document.getElementById('inputCode').value.trim();
-      const svg_preview = document.getElementById('inputSvg').value.trim() || null;
+      const preview = document.getElementById('inputSvg').value.trim() || null;
       const msg         = document.getElementById('formMsg');
 
       if (!nom || !categorie || !description || !code) {
@@ -166,7 +166,7 @@
 
       const { error } = await db
         .from('fonctions')
-        .insert([{ nom, type, categorie, sous_categorie, description, code, svg_preview, statut: 'pending' }]);
+        .insert([{ nom, type, categorie, sous_categorie, description, code, preview, statut: 'pending' }]);
 
       if (error) {
         msg.textContent = `❌ Erreur : ${error.message}`;

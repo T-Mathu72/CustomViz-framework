@@ -108,9 +108,9 @@ async function openProposalModal(id, mode = 'pending') {
   document.getElementById('propModalCode').textContent = data.code || '';
 
   const svgWrap = document.getElementById('propSvgPreview');
-  svgWrap.innerHTML = data.svg_preview
-    ? data.svg_preview
-    : `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.78rem">Aucun aperçu SVG fourni.</span>`;
+  svgWrap.innerHTML = data.preview
+    ? data.preview
+    : `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.78rem">Aucun aperçu fourni.</span>`;
 
   // Actions selon le mode
   const isPending  = mode === 'pending';

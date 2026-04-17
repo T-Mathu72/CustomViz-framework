@@ -124,8 +124,8 @@ function renderImageSection(items) {
       const preview = card.querySelector('.img-lazy-placeholder');
       if (!preview) return;
       const fn = fnMap.get(card.dataset.id);
-      preview.innerHTML = fn?.svg_preview
-        ? stripSvgDims(fn.svg_preview)
+      preview.innerHTML = fn?.preview
+        ? stripSvgDims(fn.preview)
         : '<div class="svg-empty" style="padding:1rem;color:var(--text-muted);font-size:.8rem">Aucun aperçu.</div>';
       preview.classList.remove('img-lazy-placeholder');
       _svgObserver.unobserve(card);
@@ -312,8 +312,8 @@ function renderGrid(functions) {
 
   grid.innerHTML = functions.map(fn => {
     const color = categoryColor(fn.categorie);
-    const thumb = fn.svg_preview && fn.svg_preview.trim()
-      ? `<div class="fn-svg-thumb">${stripSvgDims(fn.svg_preview)}</div>`
+    const thumb = fn.preview && fn.preview.trim()
+      ? `<div class="fn-svg-thumb">${stripSvgDims(fn.preview)}</div>`
       : `<div class="fn-dax-icon" style="color:${color}">DAX</div>`;
     return `
       <div class="fn-card" data-id="${fn.id}" style="--cat-color:${color}">
@@ -714,7 +714,7 @@ let _currentGenFn = null;
 function buildGenericGenerator(fn) {
   const form = document.getElementById('genForm');
   const wrap = document.getElementById('genPreviewWrap');
-  const svgOrig = fn.svg_preview?.trim() || '';
+  const svgOrig = fn.preview?.trim() || '';
 
   if (!svgOrig) {
     form.innerHTML = '';
@@ -920,9 +920,9 @@ function openModal(fn) {
   document.getElementById('modalCode').textContent = fn.code || '';
 
   const svgWrap = document.getElementById('svgPreviewWrap');
-  svgWrap.innerHTML = fn.svg_preview && fn.svg_preview.trim()
-    ? fn.svg_preview
-    : `<div class="svg-empty"><span>🎨</span>Aucun aperçu SVG.</div>`;
+  svgWrap.innerHTML = fn.preview && fn.preview.trim()
+    ? fn.preview
+    : `<div class="svg-empty"><span>🎨</span>Aucun aperçu.</div>`;
 
   buildGenerator(fn);
   switchTab('svg');

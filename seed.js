@@ -29,7 +29,7 @@ RETURN
         "<rect x='0' y='0' width='227' height='22' rx='11' fill='" & CouleurBackground & "'/>" &
         "<rect x='0' y='0' width='" & WidthJauge & "' height='22' rx='11' fill='" & CouleurJauge & "'/>" &
     "</svg>"`,
-    svg_preview: `<svg width="227" height="22" viewBox="0 0 227 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="227" height="22" viewBox="0 0 227 22" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="0" width="227" height="22" rx="11" fill="#FFE2E2"/>
   <rect x="0" y="0" width="170" height="22" rx="11" fill="#CC0000"/>
 </svg>`
@@ -60,7 +60,7 @@ RETURN
         "<rect x='0' y='0' width='227' height='22' rx='11' fill='" & CouleurFond & "'/>" &
         "<rect x='0' y='0' width='" & WidthJauge & "' height='22' rx='11' fill='" & CouleurJauge & "'/>" &
     "</svg>"`,
-    svg_preview: `<svg width="227" height="22" viewBox="0 0 227 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="227" height="22" viewBox="0 0 227 22" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="0" width="227" height="22" rx="11" fill="#F0F0F0"/>
   <rect x="0" y="0" width="193" height="22" rx="11" fill="#22C55E"/>
 </svg>`
@@ -85,7 +85,7 @@ RETURN
         "<circle cx='36' cy='12' r='7' fill='" & OrangeActif & "'/>" &
         "<circle cx='56' cy='12' r='7' fill='" & VertActif   & "'/>" &
     "</svg>"`,
-    svg_preview: `<svg width="72" height="24" viewBox="0 0 72 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="72" height="24" viewBox="0 0 72 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="72" height="24" rx="12" fill="#1F2937"/>
   <circle cx="16" cy="12" r="7" fill="#FECACA"/>
   <circle cx="36" cy="12" r="7" fill="#FDE68A"/>
@@ -115,7 +115,7 @@ RETURN
         "<text x='32' y='18' text-anchor='middle' font-family='Arial,sans-serif' " &
         "font-size='11' font-weight='700' fill='white'>" & Texte & "</text>" &
     "</svg>"`,
-    svg_preview: `<svg width="64" height="26" viewBox="0 0 64 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="64" height="26" viewBox="0 0 64 26" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="64" height="26" rx="13" fill="#22C55E"/>
   <text x="32" y="18" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="white">87%</text>
 </svg>`
@@ -146,7 +146,7 @@ RETURN
         "<text x='40' y='45' text-anchor='middle' font-family='Arial,sans-serif' " &
         "font-size='14' font-weight='700' fill='#374151'>" & PctTexte & "</text>" &
     "</svg>"`,
-    svg_preview: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
   <circle cx="40" cy="40" r="30" fill="none" stroke="#E5E7EB" stroke-width="7"/>
   <circle cx="40" cy="40" r="30" fill="none" stroke="#6366F1" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="47" transform="rotate(-90 40 40)"/>
   <text x="40" y="45" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#374151">75%</text>
@@ -173,7 +173,7 @@ RETURN
         "<rect x='10' y='11' width='" & LValeur   & "' height='10' rx='3' fill='#6366F1'/>" &
         "<rect x='" & (10 + LObjectif - 1) & "' y='5' width='3' height='22' rx='1' fill='#1F2937'/>" &
     "</svg>"`,
-    svg_preview: `<svg width="220" height="32" viewBox="0 0 220 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="220" height="32" viewBox="0 0 220 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="10" y="9" width="200" height="14" rx="3" fill="#E5E7EB"/>
   <rect x="10" y="11" width="138" height="10" rx="3" fill="#6366F1"/>
   <rect x="176" y="5" width="3" height="22" rx="1" fill="#1F2937"/>
@@ -210,7 +210,7 @@ RETURN
         "<rect x='" & (2+(W+G)*3) & "' y='" & (32-B4) & "' width='" & W & "' height='" & B4 & "' rx='2' fill='#6366F1'/>" &
         "<rect x='" & (2+(W+G)*4) & "' y='" & (32-B5) & "' width='" & W & "' height='" & B5 & "' rx='2' fill='#4F46E5'/>" &
     "</svg>"`,
-    svg_preview: `<svg width="68" height="34" viewBox="0 0 68 34" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="68" height="34" viewBox="0 0 68 34" xmlns="http://www.w3.org/2000/svg">
   <rect x="2"  y="14" width="8" height="18" rx="2" fill="#C7D2FE"/>
   <rect x="14" y="20" width="8" height="12" rx="2" fill="#A5B4FC"/>
   <rect x="26" y="6"  width="8" height="26" rx="2" fill="#818CF8"/>
@@ -245,7 +245,7 @@ RETURN
     "<svg width='90' height='18' viewBox='0 0 90 18' xmlns='http://www.w3.org/2000/svg'>" &
         E1 & E2 & E3 & E4 & E5 &
     "</svg>"`,
-    svg_preview: `<svg width="90" height="18" viewBox="0 0 90 18" xmlns="http://www.w3.org/2000/svg">
+    preview: `<svg width="90" height="18" viewBox="0 0 90 18" xmlns="http://www.w3.org/2000/svg">
   <circle cx="9"  cy="9" r="7" fill="#F59E0B"/>
   <circle cx="27" cy="9" r="7" fill="#F59E0B"/>
   <circle cx="45" cy="9" r="7" fill="#F59E0B"/>
@@ -260,7 +260,7 @@ RETURN
 async function seed() {
   console.log(`\nInsertion de ${mesures.length} mesures dans Supabase…\n`);
 
-  // Vérifier/ajouter la colonne svg_preview si nécessaire
+  // Vérifier/ajouter la colonne preview si nécessaire
   const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/fonctions?limit=1`, {
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
   });
@@ -269,7 +269,7 @@ async function seed() {
     process.exit(1);
   }
 
-  // Détecte si la colonne svg_preview existe
+  // Détecte si la colonne preview existe
   let hasSvgCol = true;
   const testRes = await fetch(`${SUPABASE_URL}/rest/v1/fonctions`, {
     method: 'POST',
@@ -279,15 +279,15 @@ async function seed() {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal'
     },
-    body: JSON.stringify({ nom: '__test__', categorie: 'test', description: 'test', code: 'test', svg_preview: null })
+    body: JSON.stringify({ nom: '__test__', categorie: 'test', description: 'test', code: 'test', preview: null })
   });
   if (!testRes.ok) {
     const testErr = await testRes.text();
-    if (testErr.includes('svg_preview')) {
+    if (testErr.includes('preview')) {
       hasSvgCol = false;
-      console.warn('  ⚠  Colonne svg_preview absente — les aperçus SVG ne seront pas insérés.');
+      console.warn('  ⚠  Colonne preview absente — les aperçus SVG ne seront pas insérés.');
       console.warn('     Ajoutez-la dans Supabase SQL Editor :');
-      console.warn('     ALTER TABLE fonctions ADD COLUMN svg_preview text;\n');
+      console.warn('     ALTER TABLE fonctions ADD COLUMN preview text;\n');
     }
   } else {
     // Supprime la ligne de test
@@ -307,7 +307,7 @@ async function seed() {
     const existing = await checkExist.json();
 
     if (existing.length > 0 && hasSvgCol) {
-      // Met à jour le svg_preview sur la ligne existante
+      // Met à jour le preview sur la ligne existante
       const id = existing[0].id;
       const upd = await fetch(`${SUPABASE_URL}/rest/v1/fonctions?id=eq.${id}`, {
         method: 'PATCH',
@@ -317,10 +317,10 @@ async function seed() {
           'Content-Type': 'application/json',
           Prefer: 'return=minimal'
         },
-        body: JSON.stringify({ svg_preview: m.svg_preview })
+        body: JSON.stringify({ preview: m.preview })
       });
       if (upd.ok) {
-        console.log(`  ↻  ${m.nom}  — svg_preview mis à jour`);
+        console.log(`  ↻  ${m.nom}  — preview mis à jour`);
         ok++;
       } else {
         console.error(`  ✗  ${m.nom} (update) — ${await upd.text()}`);
@@ -329,7 +329,7 @@ async function seed() {
       continue;
     }
 
-    const payload = hasSvgCol ? m : (({ svg_preview, ...rest }) => rest)(m);
+    const payload = hasSvgCol ? m : (({ preview, ...rest }) => rest)(m);
     const res = await fetch(`${SUPABASE_URL}/rest/v1/fonctions`, {
       method: 'POST',
       headers: {

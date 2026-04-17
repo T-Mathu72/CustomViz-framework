@@ -6,6 +6,10 @@
 -- 1. Colonnes
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS sous_categorie TEXT;
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'svg';
+ALTER TABLE fonctions RENAME COLUMN svg_preview TO preview;
+
+-- Contrainte unique sur nom pour éviter les doublons lors des re-exécutions
+ALTER TABLE fonctions ADD CONSTRAINT fonctions_nom_unique UNIQUE (nom);
 
 -- 2. Types
 UPDATE fonctions SET type = 'svg'   WHERE type IS NULL OR type = 'dax' OR type = '';
