@@ -36,17 +36,18 @@ async function loadFunctions() {
   });
 
   buildTypeTabs();
-  buildSidebarCats(cats);
-  buildFilters(cats);
+  buildSidebarCats();
+  buildFilters();
   buildImageSection();
   applyFilters();
 }
 
-// ---- Helpers type ----
-const isDax   = f => f.categorie !== 'Carte' && f.categorie !== 'HTML' && f.categorie !== 'Deneb';
-const isSvg   = f => f.categorie === 'Carte';
-const isHtml  = f => f.categorie === 'HTML';
-const isDeneb = f => f.categorie === 'Deneb';
+// ---- Helpers type (utilise la colonne `type` en DB) ----
+const isDax   = f => !f.type || f.type === 'dax';
+const isSvg   = f => f.type === 'svg';
+const isHtml  = f => f.type === 'html';
+const isDeneb = f => f.type === 'deneb';
+const typeFilter = { dax: isDax, svg: isSvg, html: isHtml, deneb: isDeneb };
 
 // ---- Type tabs ----
 function buildTypeTabs() {
@@ -73,17 +74,13 @@ function switchType(type) {
     imageSection.style.display = 'none';
     const titleEl = tableSection.querySelector('.section-title');
     if (titleEl) titleEl.textContent =
-      type === 'html' ? 'Visuels HTML' :
+      type === 'html'  ? 'Visuels HTML' :
       type === 'deneb' ? 'Visuels Deneb / Vega-Lite' :
       'Mesures DAX';
   }
 
-  // Rebuild sub-category filters for the active type
-  const tableCats = type === 'dax'
-    ? [...new Set(allFunctions.filter(isDax).map(f => f.categorie).filter(Boolean))]
-    : [];
-  buildFilters(tableCats, type !== 'dax');
-
+  buildSidebarCats();
+  buildFilters();
   applyFilters();
 }
 
@@ -113,68 +110,52 @@ function buildImageSection() {
   });
 }
 
-// ---- Sidebar catégories ----
-function buildSidebarCats(cats) {
+// ---- Sidebar catégories (dynamique selon activeType) ----
+function buildSidebarCats() {
   const container = document.getElementById('sbCats');
   if (!container) return;
   container.innerHTML = '';
 
-  const sections = [
-    { label: 'DAX',   type: 'dax',   filter: isDax,   color: 'var(--accent)' },
-    { label: 'SVG',   type: 'svg',   filter: isSvg,   color: '#0891b2' },
-    { label: 'HTML',  type: 'html',  filter: isHtml,  color: '#f59e0b' },
-    { label: 'Deneb', type: 'deneb', filter: isDeneb, color: '#7c3aed' },
-  ];
+  const items = allFunctions.filter(typeFilter[activeType]);
+  const cats  = [...new Set(items.map(f => f.categorie).filter(Boolean))];
+  const typeColors = { dax: 'var(--accent)', svg: '#0891b2', html: '#f59e0b', deneb: '#7c3aed' };
+  const accentColor = typeColors[activeType];
 
-  sections.forEach(({ label, type, filter, color }) => {
-    const items = allFunctions.filter(filter);
-    if (items.length === 0 && type !== 'dax') return; // hide empty non-dax sections
+  // Bouton "Toutes"
+  const allBtn = document.createElement('button');
+  allBtn.className = 'sb-cat-btn active';
+  allBtn.dataset.cat = 'all';
+  allBtn.innerHTML = `<span class="sb-cat-dot" style="background:${accentColor}"></span>Toutes<span class="sb-cat-count">${items.length}</span>`;
+  container.appendChild(allBtn);
 
-    const totalCount = items.length;
-    container.insertAdjacentHTML('beforeend',
-      `<div class="sb-type-label" style="margin-top:.9rem">${label}</div>`);
-
-    const allBtn = document.createElement('button');
-    allBtn.className = 'sb-cat-btn' + (type === 'dax' ? ' active' : '');
-    allBtn.dataset.stype = type;
-    allBtn.dataset.cat   = 'all';
-    allBtn.innerHTML = `<span class="sb-cat-dot" style="background:${color}"></span>Toutes<span class="sb-cat-count">${totalCount}</span>`;
-    container.appendChild(allBtn);
-
-    if (type === 'dax') {
-      const daxCats = cats.filter(c => c !== 'Carte' && c !== 'HTML' && c !== 'Deneb');
-      daxCats.forEach(cat => {
-        const count = allFunctions.filter(f => f.categorie === cat).length;
-        const btn = document.createElement('button');
-        btn.className = 'sb-cat-btn';
-        btn.dataset.stype = 'dax';
-        btn.dataset.cat   = cat;
-        btn.innerHTML = `<span class="sb-cat-dot" style="background:${categoryColor(cat)}"></span>${escHtml(cat)}<span class="sb-cat-count">${count}</span>`;
-        container.appendChild(btn);
-      });
-    }
+  // Sous-catégories
+  cats.forEach(cat => {
+    const count = items.filter(f => f.categorie === cat).length;
+    const btn = document.createElement('button');
+    btn.className = 'sb-cat-btn';
+    btn.dataset.cat = cat;
+    btn.innerHTML = `<span class="sb-cat-dot" style="background:${categoryColor(cat)}"></span>${escHtml(cat)}<span class="sb-cat-count">${count}</span>`;
+    container.appendChild(btn);
   });
 
   container.querySelectorAll('.sb-cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const type = btn.dataset.stype;
-      const cat  = btn.dataset.cat;
       container.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      switchType(type);
-      if (type === 'dax') {
-        activeCategory = cat;
-        syncFilters();
-        applyFilters();
-      }
+      activeCategory = btn.dataset.cat;
+      syncFilters();
+      applyFilters();
     });
   });
 }
 
-// ---- Filtres sous-catégories (DAX uniquement) ----
-function buildFilters(cats, hide = false) {
+// ---- Filtres sous-catégories (barre sous le titre de section) ----
+function buildFilters() {
   const container = document.getElementById('filters');
-  if (hide || cats.length === 0) { container.innerHTML = ''; return; }
+  if (!container) return;
+  const items = allFunctions.filter(typeFilter[activeType]);
+  const cats  = [...new Set(items.map(f => f.categorie).filter(Boolean))];
+  if (cats.length <= 1) { container.innerHTML = ''; return; }
   container.innerHTML = `<button class="filter-btn active" data-cat="all">Toutes</button>`;
   cats.forEach(cat => {
     const btn = document.createElement('button');
@@ -187,6 +168,7 @@ function buildFilters(cats, hide = false) {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.cat;
       syncFilters();
+      syncSidebar();
       applyFilters();
     });
   });
@@ -194,6 +176,10 @@ function buildFilters(cats, hide = false) {
 
 function syncFilters() {
   document.querySelectorAll('#filters .filter-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === activeCategory));
+}
+function syncSidebar() {
+  document.querySelectorAll('#sbCats .sb-cat-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.cat === activeCategory));
 }
 
@@ -264,12 +250,8 @@ function applyFilters() {
   let filtered;
 
   if (activeType === 'svg') return; // handled by buildImageSection
-  if (activeType === 'html')  filtered = allFunctions.filter(isHtml);
-  else if (activeType === 'deneb') filtered = allFunctions.filter(isDeneb);
-  else {
-    filtered = allFunctions.filter(isDax);
-    if (activeCategory !== 'all') filtered = filtered.filter(f => f.categorie === activeCategory);
-  }
+  filtered = allFunctions.filter(typeFilter[activeType]);
+  if (activeCategory !== 'all') filtered = filtered.filter(f => f.categorie === activeCategory);
 
   if (q) filtered = filtered.filter(f =>
     f.nom.toLowerCase().includes(q) ||

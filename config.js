@@ -4,9 +4,15 @@
 //  2. Dans Settings > API, copiez votre URL et votre anon key
 //  3. Remplacez les valeurs ci-dessous
 //
-//  Migration SQL requise (à exécuter une seule fois dans l'éditeur SQL Supabase) :
+//  Migrations SQL (à exécuter dans l'éditeur SQL Supabase) :
 //    ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS statut TEXT DEFAULT 'approved';
 //    UPDATE fonctions SET statut = 'approved' WHERE statut IS NULL;
+//
+//    ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'dax';
+//    UPDATE fonctions SET type = 'svg'   WHERE categorie = 'Carte';
+//    UPDATE fonctions SET type = 'html'  WHERE categorie = 'HTML';
+//    UPDATE fonctions SET type = 'deneb' WHERE categorie = 'Deneb';
+//    UPDATE fonctions SET type = 'dax'   WHERE type IS NULL;
 // ============================================================
 
 const SUPABASE_URL  = 'https://fcgdefombxdwpeqmqsaa.supabase.co';   // ex: https://xxxx.supabase.co

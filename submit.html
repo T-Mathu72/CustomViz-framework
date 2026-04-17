@@ -67,19 +67,28 @@
         <h2 class="card-title">✦ Nouvelle proposition</h2>
         <div class="form-grid">
           <div class="field">
-            <label>Nom de la mesure *</label>
+            <label>Nom *</label>
             <input type="text" id="inputNom" placeholder="ex: KPI Ventes Total"/>
           </div>
           <div class="field">
-            <label>Catégorie *</label>
-            <input type="text" id="inputCategorie" placeholder="ex: KPI, Finance, Date…"/>
+            <label>Type *</label>
+            <select id="inputType">
+              <option value="dax">DAX</option>
+              <option value="svg">SVG</option>
+              <option value="html">HTML</option>
+              <option value="deneb">Deneb / Vega-Lite</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Sous-catégorie *</label>
+            <input type="text" id="inputCategorie" placeholder="ex: KPI, Jauges, Indicateur…"/>
           </div>
           <div class="field full">
             <label>Description *</label>
             <textarea id="inputDesc" rows="2" placeholder="Ce que fait cette mesure…"></textarea>
           </div>
           <div class="field full">
-            <label>Code DAX *</label>
+            <label>Code <span id="codeLabelType" style="color:var(--text-muted);font-weight:400">DAX</span> *</label>
             <textarea id="inputCode" rows="8" placeholder="Ventes Total =&#10;CALCULATE(&#10;    SUM(Ventes[Montant]),&#10;    ALLSELECTED()&#10;)"></textarea>
           </div>
           <div class="field full">
@@ -126,9 +135,16 @@
         : `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.73rem">L'aperçu SVG apparaîtra ici</span>`;
     });
 
+    // Adapter le label "Code" selon le type sélectionné
+    document.getElementById('inputType').addEventListener('change', e => {
+      const labels = { dax: 'DAX', svg: 'SVG / JSON', html: 'HTML', deneb: 'Vega-Lite JSON' };
+      document.getElementById('codeLabelType').textContent = labels[e.target.value] || 'DAX';
+    });
+
     // Submit
     document.getElementById('btnSoumettre').addEventListener('click', async () => {
       const nom         = document.getElementById('inputNom').value.trim();
+      const type        = document.getElementById('inputType').value;
       const categorie   = document.getElementById('inputCategorie').value.trim();
       const description = document.getElementById('inputDesc').value.trim();
       const code        = document.getElementById('inputCode').value.trim();
@@ -146,7 +162,7 @@
 
       const { error } = await db
         .from('fonctions')
-        .insert([{ nom, categorie, description, code, svg_preview, statut: 'pending' }]);
+        .insert([{ nom, type, categorie, description, code, svg_preview, statut: 'pending' }]);
 
       if (error) {
         msg.textContent = `❌ Erreur : ${error.message}`;
