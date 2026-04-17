@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Éditeur HTML — CustomViz</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('cv-theme') || 'light');</script>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .editor-layout {
+      display: grid;
+      grid-template-columns: var(--split-h, 50%) 5px 1fr;
+      grid-template-rows: 1fr auto;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+    }
+
+    .editor-left {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      grid-row: 1; grid-column: 1;
+    }
+
+    .editor-right {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      grid-row: 1; grid-column: 3;
+    }
+
+    .editor-statusbar { grid-column: 1 / -1; grid-row: 2; }
+
+    /* Poignée verticale */
+    .resizer-v {
+      grid-row: 1; grid-column: 2;
+      cursor: col-resize;
+      background: var(--border);
+      transition: background .15s;
+      position: relative; z-index: 5;
+    }
+    .resizer-v::after { content: ''; position: absolute; inset: 0 -4px; }
+    .resizer-v:hover, .resizer-v.dragging { background: var(--accent); }
+
+    body.dragging-h { cursor: col-resize !important; user-select: none; }
+
+    /* En-têtes de panneau */
+    .editor-pane-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 .85rem; height: 36px; min-height: 36px;
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      font-size: .74rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0;
+    }
+    .editor-pane-header .pane-actions { display: flex; align-items: center; gap: .4rem; }
+
+    /* Textarea */
+    .editor-textarea {
+      flex: 1 1 0; min-height: 0;
+      width: 100%; padding: .85rem 1rem;
+      font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.6;
+      background: var(--surface); color: var(--text);
+      border: none; outline: none; resize: none; overflow-y: auto; tab-size: 2;
+    }
+    .editor-textarea::placeholder { color: var(--text-muted); }
+
+    /* Preview iframe */
+    .preview-area {
+      flex: 1 1 0; min-height: 0; overflow: auto;
+      background: var(--surface); position: relative;
+    }
+    #previewScaleWrap {
+      transform-origin: top left;
+      transition: transform .15s ease;
+      width: 100%; height: 100%;
+    }
+    #previewFrame {
+      width: 100%; height: 100%;
+      border: none; display: block;
+      background: #fff;
+    }
+
+    /* Fond de page de l'iframe */
+    .preview-area[data-bg="white"]  #previewFrame { background: #fff; }
+    .preview-area[data-bg="gray"]   #previewFrame { background: #f3f4f6; }
+    .preview-area[data-bg="dark"]   #previewFrame { background: #1a1a2e; }
+    .preview-area[data-bg="trans"]  #previewFrame { background: transparent; }
+
+    /* Sélecteur fond */
+    .bg-picker { display: flex; gap: 3px; }
+    .bg-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid transparent; cursor: pointer;
+      transition: border-color .12s; outline: none;
+    }
+    .bg-dot:hover           { border-color: var(--text-muted); }
+    .bg-dot.active          { border-color: var(--accent); }
+    .bg-dot[data-bg="white"]{ background: #fff; box-shadow: inset 0 0 0 1px #d1d5db; }
+    .bg-dot[data-bg="gray"] { background: #e5e7eb; }
+    .bg-dot[data-bg="dark"] { background: #1a1a2e; }
+    .bg-dot[data-bg="trans"]{ background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 8px 8px; box-shadow: inset 0 0 0 1px #d1d5db; }
+
+    /* Erreur */
+    .preview-error {
+      display: none; padding: .65rem 1rem;
+      background: rgba(185,28,28,.08); border-top: 1px solid rgba(185,28,28,.2);
+      font-family: 'JetBrains Mono', monospace; font-size: .73rem; color: #b91c1c;
+      white-space: pre-wrap; max-height: 80px; overflow-y: auto; flex-shrink: 0;
+    }
+    [data-theme="dark"] .preview-error { color: #fca5a5; background: rgba(239,68,68,.08); }
+    .preview-error.visible { display: block; }
+
+    /* Boutons */
+    .pane-btn {
+      font-size: .72rem; font-weight: 500; padding: 2px 9px;
+      border-radius: 5px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-sub);
+      cursor: pointer; transition: background .12s, color .12s; font-family: inherit;
+    }
+    .pane-btn:hover { background: var(--surface2); color: var(--text); }
+    .pane-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .pane-btn.primary:hover { opacity: .88; }
+
+    /* Status bar */
+    .editor-statusbar {
+      height: 26px; display: flex; align-items: center; gap: 1rem;
+      padding: 0 .85rem; background: var(--surface2); border-top: 1px solid var(--border);
+      font-size: .7rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; flex-shrink: 0; }
+    .status-dot.ok      { background: #22c55e; }
+    .status-dot.error   { background: #ef4444; }
+    .status-dot.loading { background: #f59e0b; animation: pulse .8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* Zoom */
+    .zoom-controls { display: flex; align-items: center; gap: 2px; }
+    .zoom-btn {
+      width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 5px; background: var(--surface);
+      color: var(--text-sub); cursor: pointer; font-size: .78rem; font-weight: 700;
+      line-height: 1; transition: background .12s, color .12s; font-family: inherit;
+    }
+    .zoom-btn:hover { background: var(--surface2); color: var(--text); }
+    .zoom-level {
+      min-width: 42px; height: 22px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 5px; background: var(--surface);
+      font-size: .72rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-sub); cursor: pointer; user-select: none; transition: background .12s;
+    }
+    .zoom-level:hover { background: var(--surface2); }
+
+    @media (max-width: 700px) {
+      .editor-layout { grid-template-columns: 1fr; grid-template-rows: 1fr 5px 1fr auto; }
+      .editor-left  { grid-column: 1; grid-row: 1; }
+      .resizer-v    { grid-column: 1; grid-row: 2; height: 5px; width: auto; cursor: row-resize; }
+      .editor-right { grid-column: 1; grid-row: 3; }
+    }
+  </style>
+</head>
+<body style="overflow:hidden">
+
+  <!-- ── Header ── -->
+  <header style="position:sticky;top:0;z-index:10">
+    <div class="header-inner">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <a href="index.html" style="color:var(--text-muted);font-size:.82rem;text-decoration:none;display:flex;align-items:center;gap:.3rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px"><polyline points="15 18 9 12 15 6"/></svg>
+          Bibliothèque
+        </a>
+        <span style="color:var(--border2)">·</span>
+        <span style="font-size:.88rem;font-weight:600">Éditeur HTML</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <button class="pane-btn" id="btnFormat" title="Indenter le HTML (Ctrl+Shift+F)">Formater</button>
+        <button class="pane-btn" id="btnReset"  title="Réinitialiser">Réinitialiser</button>
+        <button class="pane-btn primary" id="btnPropose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;vertical-align:middle;margin-right:3px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          Proposer
+        </button>
+        <button class="theme-toggle" id="themeToggle" aria-label="Thème">
+          <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Éditeur ── -->
+  <div class="editor-layout">
+
+    <!-- Gauche : code HTML -->
+    <div class="editor-left">
+      <div style="display:flex;flex-direction:column;flex:1 1 0;min-height:0;overflow:hidden">
+        <div class="editor-pane-header">
+          <span>HTML</span>
+          <div class="pane-actions">
+            <button class="pane-btn" id="btnCopy">Copier</button>
+          </div>
+        </div>
+        <textarea class="editor-textarea" id="codeEditor"
+          spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"
+          placeholder="<!-- Votre HTML ici -->"></textarea>
+      </div>
+    </div>
+
+    <!-- Poignée gauche / droite -->
+    <div class="resizer-v" id="resizerV"></div>
+
+    <!-- Droite : preview -->
+    <div class="editor-right">
+      <div class="editor-pane-header">
+        <span>Aperçu</span>
+        <div class="pane-actions">
+          <div class="bg-picker" id="bgPicker" title="Fond de la preview">
+            <button class="bg-dot active" data-bg="white" title="Fond blanc"></button>
+            <button class="bg-dot"        data-bg="gray"  title="Fond gris"></button>
+            <button class="bg-dot"        data-bg="dark"  title="Fond sombre"></button>
+            <button class="bg-dot"        data-bg="trans" title="Transparent"></button>
+          </div>
+          <div style="width:1px;height:16px;background:var(--border);margin:0 2px"></div>
+          <div class="zoom-controls">
+            <button class="zoom-btn"  id="btnZoomOut" title="Dézoomer (Ctrl+−)">−</button>
+            <span   class="zoom-level" id="zoomLevel" title="Réinitialiser (Ctrl+0)">100%</span>
+            <button class="zoom-btn"  id="btnZoomIn"  title="Zoomer (Ctrl++)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="preview-area" id="previewArea" data-bg="white">
+        <div id="previewScaleWrap">
+          <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+      </div>
+      <div class="preview-error" id="previewError"></div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="editor-statusbar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Prêt</span>
+      <span style="margin-left:auto" id="lineCount"></span>
+    </div>
+  </div>
+
+  <script src="theme.js"></script>
+  <script>
+    // ── Défaut ───────────────────────────────────────────────────────────
+    const DEFAULT_HTML = `<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { padding: 1.5rem; background: transparent; }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    max-width: 320px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .label  { font-size: .75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .35rem; }
+  .value  { font-size: 2rem; font-weight: 800; color: #111; letter-spacing: -.03em; }
+  .trend  { display: inline-flex; align-items: center; gap: .25rem; margin-top: .4rem; font-size: .8rem; font-weight: 600; color: #16a34a; }
+  .trend svg { width: 14px; }
+</style>
+
+<div class="card">
+  <div class="label">Chiffre d'affaires</div>
+  <div class="value">124 580 €</div>
+  <div class="trend">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="18 15 12 9 6 15"/>
+    </svg>
+    +12,4 % vs mois dernier
+  </div>
+</div>`;
+
+    // ── Refs ─────────────────────────────────────────────────────────────
+    const codeEditor  = document.getElementById('codeEditor');
+    const previewFrame = document.getElementById('previewFrame');
+    const previewArea  = document.getElementById('previewArea');
+    const statusDot    = document.getElementById('statusDot');
+    const statusText   = document.getElementById('statusText');
+    const lineCount    = document.getElementById('lineCount');
+    const previewErr   = document.getElementById('previewError');
+    let _debounce = null;
+
+    // ── Init ─────────────────────────────────────────────────────────────
+    function init() {
+      const saved   = localStorage.getItem('cv-html-code');
+      const savedBg = localStorage.getItem('cv-html-bg') || 'white';
+      codeEditor.value = saved || DEFAULT_HTML;
+      setBg(savedBg);
+      updateLineCount();
+      render();
+    }
+
+    // ── Rendu ─────────────────────────────────────────────────────────────
+    function render() {
+      previewErr.classList.remove('visible');
+      const html = codeEditor.value;
+      try {
+        // Injecte dans l'iframe via srcdoc
+        previewFrame.srcdoc = html;
+        setStatus('ok', 'OK');
+        localStorage.setItem('cv-html-code', html);
+      } catch (e) {
+        setStatus('error', e.message);
+        previewErr.textContent = e.message;
+        previewErr.classList.add('visible');
+      }
+    }
+
+    function scheduleRender() {
+      clearTimeout(_debounce);
+      setStatus('loading', 'En attente…');
+      _debounce = setTimeout(render, 400);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function setStatus(type, msg) {
+      statusDot.className = 'status-dot ' + type;
+      statusText.textContent = msg;
+    }
+
+    function updateLineCount() {
+      const n = codeEditor.value.split('\n').length;
+      lineCount.textContent = n + ' ligne' + (n > 1 ? 's' : '');
+    }
+
+    // Indentation HTML simple (conserve l'existant, normalise juste les indents)
+    function formatHTML(raw) {
+      const INDENT = '  ';
+      let depth = 0, out = '';
+      const tokens = raw
+        .replace(/>\s+</g, '>\n<')        // une balise par ligne
+        .replace(/^\s+|\s+$/gm, '')       // strip whitespace en début/fin de chaque ligne
+        .split('\n')
+        .filter(l => l.length > 0);
+
+      for (const line of tokens) {
+        const isClose   = /^<\//.test(line);
+        const isSelf    = /\/>$/.test(line) || /^<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)[\s>]/i.test(line);
+        const isOpen    = line.startsWith('<') && !isClose && !isSelf;
+        if (isClose) depth = Math.max(0, depth - 1);
+        out += INDENT.repeat(depth) + line + '\n';
+        if (isOpen && !/<.*>.*<\/.*>/.test(line)) depth++;
+      }
+      return out.trimEnd();
+    }
+
+    // ── Événements ────────────────────────────────────────────────────────
+    codeEditor.addEventListener('input', () => { updateLineCount(); scheduleRender(); });
+
+    codeEditor.addEventListener('keydown', e => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = codeEditor.selectionStart, end = codeEditor.selectionEnd;
+        codeEditor.value = codeEditor.value.substring(0, s) + '  ' + codeEditor.value.substring(end);
+        codeEditor.selectionStart = codeEditor.selectionEnd = s + 2;
+      }
+    });
+
+    document.getElementById('btnFormat').addEventListener('click', () => {
+      codeEditor.value = formatHTML(codeEditor.value);
+      updateLineCount();
+      render();
+    });
+
+    document.getElementById('btnCopy').addEventListener('click', () => {
+      navigator.clipboard.writeText(codeEditor.value).then(() => {
+        const btn = document.getElementById('btnCopy');
+        btn.textContent = '✓ Copié';
+        setTimeout(() => { btn.textContent = 'Copier'; }, 1500);
+      });
+    });
+
+    document.getElementById('btnReset').addEventListener('click', () => {
+      if (!confirm('Réinitialiser l\'éditeur ?')) return;
+      codeEditor.value = DEFAULT_HTML;
+      localStorage.removeItem('cv-html-code');
+      updateLineCount();
+      render();
+    });
+
+    document.getElementById('btnPropose').addEventListener('click', () => {
+      sessionStorage.setItem('cv-propose-code', codeEditor.value);
+      sessionStorage.setItem('cv-propose-type', 'html');
+      location.href = 'submit.html?from=editor';
+    });
+
+    // Raccourcis
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') { e.preventDefault(); document.getElementById('btnFormat').click(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); render(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) { e.preventDefault(); zoomIn(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) { e.preventDefault(); zoomOut(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === '0')  { e.preventDefault(); applyZoom(100); }
+    });
+
+    // ── Fond preview ──────────────────────────────────────────────────────
+    function setBg(bg) {
+      previewArea.dataset.bg = bg;
+      document.querySelectorAll('.bg-dot').forEach(d => d.classList.toggle('active', d.dataset.bg === bg));
+      // Applique le fond au body de l'iframe après chargement
+      previewFrame.addEventListener('load', () => {
+        try {
+          const bgMap = { white: '#fff', gray: '#f3f4f6', dark: '#1a1a2e', trans: 'transparent' };
+          if (previewFrame.contentDocument?.body)
+            previewFrame.contentDocument.body.style.background = bgMap[bg] || '#fff';
+        } catch (_) {}
+      }, { once: true });
+      localStorage.setItem('cv-html-bg', bg);
+    }
+
+    document.getElementById('bgPicker').addEventListener('click', e => {
+      const dot = e.target.closest('.bg-dot');
+      if (!dot) return;
+      setBg(dot.dataset.bg);
+      render(); // re-render pour appliquer le fond immédiatement
+    });
+
+    // ── Zoom ──────────────────────────────────────────────────────────────
+    const ZOOM_STEPS = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300];
+    let _zoom = 100;
+    const scaleWrap = document.getElementById('previewScaleWrap');
+
+    function applyZoom(pct) {
+      _zoom = Math.min(Math.max(pct, ZOOM_STEPS[0]), ZOOM_STEPS[ZOOM_STEPS.length - 1]);
+      scaleWrap.style.transform = `scale(${_zoom / 100})`;
+      scaleWrap.style.transformOrigin = 'top left';
+      // Ajuste la taille du wrapper pour que le scroll fonctionne
+      scaleWrap.style.width  = (100 / (_zoom / 100)) + '%';
+      scaleWrap.style.height = (100 / (_zoom / 100)) + '%';
+      document.getElementById('zoomLevel').textContent = _zoom + '%';
+      localStorage.setItem('cv-html-zoom', _zoom);
+    }
+    function zoomIn()  { const n = ZOOM_STEPS.find(s => s > _zoom);           if (n) applyZoom(n); }
+    function zoomOut() { const n = [...ZOOM_STEPS].reverse().find(s => s < _zoom); if (n) applyZoom(n); }
+
+    document.getElementById('btnZoomIn').addEventListener('click',  zoomIn);
+    document.getElementById('btnZoomOut').addEventListener('click', zoomOut);
+    document.getElementById('zoomLevel').addEventListener('click',  () => applyZoom(100));
+
+    previewArea.addEventListener('wheel', e => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      e.deltaY < 0 ? zoomIn() : zoomOut();
+    }, { passive: false });
+
+    const savedZoom = parseInt(localStorage.getItem('cv-html-zoom'), 10);
+    if (savedZoom && ZOOM_STEPS.includes(savedZoom)) applyZoom(savedZoom);
+
+    // ── Resize panneau gauche / droite ────────────────────────────────────
+    const layout   = document.querySelector('.editor-layout');
+    const resizerV = document.getElementById('resizerV');
+
+    const savedSplit = localStorage.getItem('cv-html-split');
+    if (savedSplit) layout.style.setProperty('--split-h', savedSplit);
+
+    resizerV.addEventListener('mousedown', e => {
+      e.preventDefault();
+      resizerV.classList.add('dragging');
+      document.body.classList.add('dragging-h');
+      const rect = layout.getBoundingClientRect();
+      function onMove(e) {
+        const pct = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        layout.style.setProperty('--split-h', Math.min(Math.max(pct, 15), 85) + '%');
+      }
+      function onUp() {
+        resizerV.classList.remove('dragging');
+        document.body.classList.remove('dragging-h');
+        localStorage.setItem('cv-html-split', getComputedStyle(layout).getPropertyValue('--split-h').trim());
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+
+    // ── Démarrage ─────────────────────────────────────────────────────────
+    init();
+  </script>
+</body>
+</html>

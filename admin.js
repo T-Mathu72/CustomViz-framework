@@ -112,27 +112,19 @@ async function openProposalModal(id, mode = 'pending') {
   document.getElementById('propModalDesc').textContent = data.description || '';
   document.getElementById('propModalCode').textContent = data.code || '';
 
-  // Badge modification
-  const existingBadge = document.getElementById('propModificationBadge');
-  if (existingBadge) existingBadge.remove();
-  if (data.original_id) {
-    const badge = document.createElement('div');
-    badge.id = 'propModificationBadge';
-    badge.style.cssText = 'margin-bottom:.75rem;font-size:.78rem;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:5px 10px;display:inline-block';
-    badge.textContent = 'Proposition de modification d\'un visuel existant';
-    document.getElementById('propModalDesc').insertAdjacentElement('beforebegin', badge);
-  }
-
-  const svgWrap = document.getElementById('propSvgPreview');
-  svgWrap.innerHTML = data.preview
-    ? data.preview
-    : `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.78rem">Aucun aperçu fourni.</span>`;
-
   // Actions selon le mode
   const isPending  = mode === 'pending';
   document.getElementById('propRejectBtn').style.display  = isPending ? '' : 'none';
   document.getElementById('propApproveBtn').style.display = isPending ? '' : 'none';
   document.getElementById('propDeleteBtn').style.display  = isPending ? 'none' : '';
+
+  // Rendu normal ou diff
+  if (data.original_id) {
+    const { data: original } = await db.from('fonctions').select('*').eq('id', data.original_id).single();
+    original ? renderDiff(original, data) : renderNormal(data);
+  } else {
+    renderNormal(data);
+  }
 
   // Reset tabs
   document.querySelectorAll('[data-ptab]').forEach(b => b.classList.remove('active'));
@@ -141,6 +133,150 @@ async function openProposalModal(id, mode = 'pending') {
   document.querySelector('[data-ptab="svg"]').classList.add('active');
 
   document.getElementById('proposalOverlay').classList.add('open');
+}
+
+// ── Rendu normal (nouvelle proposition) ──────────────────────────────────
+function renderNormal(data) {
+  document.getElementById('propFieldsDiff').style.display = 'none';
+  document.getElementById('propFieldsDiff').innerHTML = '';
+
+  document.getElementById('propSvgDiff').innerHTML = data.preview?.trim()
+    ? `<div class="svg-preview-wrap">${data.preview}</div>`
+    : `<div class="svg-preview-wrap"><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.78rem">Aucun aperçu fourni.</span></div>`;
+
+  document.getElementById('propCodeDiff').innerHTML = buildCodeBlock(data.code || '');
+}
+
+// ── Rendu diff (proposition de modification) ──────────────────────────────
+function renderDiff(original, proposal) {
+  const LABELS = {
+    nom: 'Nom', type: 'Type', categorie: 'Catégorie',
+    sous_categorie: 'Sous-catégorie', description: 'Description'
+  };
+  const fields      = Object.keys(LABELS);
+  const changed     = fields.filter(f => (original[f] || '') !== (proposal[f] || ''));
+  const unchanged   = fields.filter(f => (original[f] || '') === (proposal[f] || '') && original[f]);
+
+  const fieldsDiff = document.getElementById('propFieldsDiff');
+  if (changed.length > 0) {
+    fieldsDiff.style.display = '';
+    fieldsDiff.innerHTML = `<div class="diff-fields">
+      ${changed.map(f => `
+        <div class="diff-field">
+          <span class="diff-field-label">${LABELS[f]}</span>
+          <span class="diff-old">${escHtml(original[f] || '—')}</span>
+          <span class="diff-arrow">→</span>
+          <span class="diff-new">${escHtml(proposal[f] || '—')}</span>
+        </div>`).join('')}
+      ${unchanged.length > 0 ? `<div class="diff-unchanged-note">${unchanged.length} champ${unchanged.length > 1 ? 's' : ''} inchangé${unchanged.length > 1 ? 's' : ''}</div>` : ''}
+    </div>`;
+  } else {
+    fieldsDiff.style.display = 'none';
+    fieldsDiff.innerHTML = '';
+  }
+
+  // Aperçu avant / après
+  const previewChanged = (original.preview || '') !== (proposal.preview || '');
+  const previewOld = original.preview?.trim()  || '';
+  const previewNew = proposal.preview?.trim()  || '';
+  const emptyMsg   = `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.78rem">Aucun aperçu</span>`;
+
+  document.getElementById('propSvgDiff').innerHTML = previewChanged
+    ? `<div class="diff-preview-cols">
+        <div class="diff-preview-col diff-col-before">
+          <div class="diff-col-label">Avant</div>
+          <div class="svg-preview-wrap">${previewOld || emptyMsg}</div>
+        </div>
+        <div class="diff-preview-col diff-col-after">
+          <div class="diff-col-label">Après</div>
+          <div class="svg-preview-wrap">${previewNew || emptyMsg}</div>
+        </div>
+      </div>`
+    : `<div class="svg-preview-wrap">${previewNew || emptyMsg}</div>`;
+
+  // Code diff
+  const codeChanged = (original.code || '') !== (proposal.code || '');
+  if (codeChanged) {
+    const diff     = computeLineDiff(original.code || '', proposal.code || '');
+    const nAdded   = diff.filter(l => l.type === 'add').length;
+    const nRemoved = diff.filter(l => l.type === 'remove').length;
+    const COPY_ICO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+    document.getElementById('propCodeDiff').innerHTML = `
+      <div class="diff-code-header">
+        <span class="diff-code-stat diff-minus">−${nRemoved}</span>
+        <span class="diff-code-stat diff-plus">+${nAdded}</span>
+        <button class="copy-btn" id="propCopyBtn" style="margin-left:auto">${COPY_ICO} Copier le nouveau</button>
+      </div>
+      <div class="diff-code-view">${renderDiffLines(diff)}</div>`;
+  } else {
+    document.getElementById('propCodeDiff').innerHTML = buildCodeBlock(proposal.code || '');
+  }
+}
+
+// ── Code block HTML (vue normale) ────────────────────────────────────────
+function buildCodeBlock(code) {
+  const COPY_ICO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  return `<div class="code-block">
+    <div class="code-header">
+      <span class="code-lang"><span class="code-lang-dot"></span>Code</span>
+      <button class="copy-btn" id="propCopyBtn">${COPY_ICO} Copier</button>
+    </div>
+    <pre>${escHtml(code)}</pre>
+  </div>`;
+}
+
+// ── Rendu diff : masque les lignes inchangées, garde 2 lignes de contexte ─
+function renderDiffLines(diff, ctx = 2) {
+  const CONTEXT = ctx;
+  const n = diff.length;
+  // Marque les lignes à afficher (changed ou dans le contexte d'un changement)
+  const show = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    if (diff[i].type !== 'same') {
+      for (let k = Math.max(0, i - CONTEXT); k <= Math.min(n - 1, i + CONTEXT); k++)
+        show[k] = 1;
+    }
+  }
+  let html = '', skipped = 0;
+  for (let i = 0; i < n; i++) {
+    if (!show[i]) { skipped++; continue; }
+    if (skipped > 0) {
+      html += `<div class="diff-line diff-line-skip"><span class="diff-line-prefix">⋯</span><span class="diff-line-content">${skipped} ligne${skipped > 1 ? 's' : ''} inchangée${skipped > 1 ? 's' : ''}</span></div>`;
+      skipped = 0;
+    }
+    const { type, line } = diff[i];
+    const prefix = type === 'add' ? '+' : type === 'remove' ? '−' : ' ';
+    const cls    = type === 'add' ? 'diff-line-add' : type === 'remove' ? 'diff-line-remove' : 'diff-line-same';
+    html += `<div class="diff-line ${cls}"><span class="diff-line-prefix">${prefix}</span><span class="diff-line-content">${escHtml(line)}</span></div>`;
+  }
+  if (skipped > 0)
+    html += `<div class="diff-line diff-line-skip"><span class="diff-line-prefix">⋯</span><span class="diff-line-content">${skipped} ligne${skipped > 1 ? 's' : ''} inchangée${skipped > 1 ? 's' : ''}</span></div>`;
+  return html;
+}
+
+// ── Diff LCS ligne par ligne ──────────────────────────────────────────────
+function computeLineDiff(oldText, newText) {
+  const oldLines = oldText.split('\n');
+  const newLines = newText.split('\n');
+  const m = oldLines.length, n = newLines.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = oldLines[i-1] === newLines[j-1]
+        ? dp[i-1][j-1] + 1
+        : Math.max(dp[i-1][j], dp[i][j-1]);
+  const result = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && oldLines[i-1] === newLines[j-1]) {
+      result.unshift({ type: 'same', line: oldLines[i-1] }); i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+      result.unshift({ type: 'add',    line: newLines[j-1] }); j--;
+    } else {
+      result.unshift({ type: 'remove', line: oldLines[i-1] }); i--;
+    }
+  }
+  return result;
 }
 
 function closeProposalModal() {
@@ -159,13 +295,16 @@ document.querySelectorAll('[data-ptab]').forEach(btn => {
   });
 });
 
-// Copy DAX
-document.getElementById('propCopyBtn').addEventListener('click', () => {
-  const code = document.getElementById('propModalCode').textContent;
+// Copier code — délégation sur la modal (le bouton est rendu dynamiquement)
+document.getElementById('proposalOverlay').addEventListener('click', e => {
+  const btn = e.target.closest('#propCopyBtn');
+  if (!btn) return;
+  const code = document.getElementById('propModalCode')?.textContent || '';
   navigator.clipboard.writeText(code).then(() => {
-    const btn = document.getElementById('propCopyBtn');
     btn.textContent = '✓ Copié';
-    setTimeout(() => { btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier`; }, 1500);
+    setTimeout(() => {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copier`;
+    }, 1500);
   });
 });
 

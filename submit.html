@@ -28,6 +28,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         Proposer
       </a>
+      <a href="deneb-editor.html" class="sb-nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Éditeur Deneb
+      </a>
+      <a href="html-editor.html" class="sb-nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+        Éditeur HTML
+      </a>
     </div>
 
     <div class="sb-footer">
@@ -143,6 +151,19 @@
       const labels = { dax: 'DAX', svg: 'SVG / JSON', html: 'HTML', deneb: 'Vega-Lite JSON' };
       document.getElementById('codeLabelType').textContent = labels[e.target.value] || 'DAX';
     });
+
+    // ── Pré-remplissage depuis l'éditeur Deneb (?from=editor) ──
+    (() => {
+      if (!new URLSearchParams(location.search).has('from')) return;
+      const code = sessionStorage.getItem('cv-propose-code');
+      const type = sessionStorage.getItem('cv-propose-type');
+      if (!code) return;
+      document.getElementById('inputCode').value = code;
+      if (type) document.getElementById('inputType').value = type;
+      document.getElementById('inputType').dispatchEvent(new Event('change'));
+      sessionStorage.removeItem('cv-propose-code');
+      sessionStorage.removeItem('cv-propose-type');
+    })();
 
     // ── Mode modification : pré-remplissage depuis ?edit=<id> ──
     let _originalId = null;

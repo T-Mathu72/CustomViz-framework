@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Éditeur Deneb — CustomViz</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('cv-theme') || 'light');</script>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Layout éditeur ─────────────────────────────────────────── */
+    .editor-layout {
+      display: grid;
+      grid-template-columns: var(--split-h, 50%) 5px 1fr;
+      grid-template-rows: 1fr auto;
+      gap: 0;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+    }
+
+    /* Panneau gauche : éditeurs */
+    .editor-left {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .editor-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .editor-pane.spec-pane  { flex: 1 1 0; min-height: 60px; }
+    .editor-pane.data-pane  { flex: 0 0 var(--data-h, 180px); min-height: 60px; overflow: hidden; }
+
+    /* Poignée verticale gauche/droite */
+    .resizer-v {
+      grid-row: 1;
+      grid-column: 2;
+      cursor: col-resize;
+      background: var(--border);
+      transition: background .15s;
+      position: relative;
+      z-index: 5;
+    }
+    .resizer-v::after {
+      content: '';
+      position: absolute;
+      inset: 0 -4px;          /* zone de clic plus large */
+    }
+    .resizer-v:hover,
+    .resizer-v.dragging { background: var(--accent); }
+
+    /* Poignée horizontale spec/data */
+    .resizer-h {
+      height: 5px;
+      cursor: row-resize;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background .15s;
+      position: relative;
+      z-index: 5;
+    }
+    .resizer-h::after {
+      content: '';
+      position: absolute;
+      inset: -4px 0;
+    }
+    .resizer-h:hover,
+    .resizer-h.dragging { background: var(--accent); }
+
+    .editor-pane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 .85rem;
+      height: 36px;
+      min-height: 36px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: .74rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      flex-shrink: 0;
+    }
+
+    .editor-pane-header .pane-actions {
+      display: flex;
+      gap: .4rem;
+    }
+
+    .pane-btn {
+      font-size: .72rem;
+      font-weight: 500;
+      padding: 2px 9px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      font-family: inherit;
+    }
+    .pane-btn:hover { background: var(--surface2); color: var(--text); }
+    .pane-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .pane-btn.primary:hover { opacity: .88; }
+
+    .editor-textarea {
+      flex: 1 1 0;
+      min-height: 0;
+      width: 100%;
+      padding: .85rem 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem;
+      line-height: 1.6;
+      background: var(--surface);
+      color: var(--text);
+      border: none;
+      outline: none;
+      resize: none;
+      overflow-y: auto;
+      tab-size: 2;
+    }
+    .editor-textarea::placeholder { color: var(--text-muted); }
+    .editor-textarea.error { background: rgba(185,28,28,.04); }
+    [data-theme="dark"] .editor-textarea.error { background: rgba(239,68,68,.06); }
+
+    /* Panneau droit : preview */
+    .editor-right {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      grid-row: 1;
+      grid-column: 3;
+    }
+
+    .preview-area {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 1.5rem;
+      background: var(--surface);
+    }
+    #vegaScaleWrap {
+      transform-origin: top center;
+      transition: transform .15s ease;
+      display: inline-block;
+      min-width: 100%;
+    }
+
+    /* Contrôles zoom */
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .zoom-btn {
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--text-sub);
+      cursor: pointer;
+      font-size: .78rem;
+      font-weight: 700;
+      line-height: 1;
+      transition: background .12s, color .12s;
+      font-family: inherit;
+    }
+    .zoom-btn:hover { background: var(--surface2); color: var(--text); }
+    .zoom-level {
+      min-width: 42px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface);
+      font-size: .72rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-sub);
+      cursor: pointer;
+      user-select: none;
+      transition: background .12s;
+    }
+    .zoom-level:hover { background: var(--surface2); }
+
+    .preview-error {
+      display: none;
+      padding: .7rem 1rem;
+      background: rgba(185,28,28,.08);
+      border-top: 1px solid rgba(185,28,28,.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .73rem;
+      color: #b91c1c;
+      white-space: pre-wrap;
+      max-height: 100px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    [data-theme="dark"] .preview-error { color: #fca5a5; background: rgba(239,68,68,.08); }
+    .preview-error.visible { display: block; }
+
+    /* Status bar */
+    .editor-statusbar {
+      height: 26px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 .85rem;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+      grid-column: 1 / -1;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #9ca3af;
+      flex-shrink: 0;
+    }
+    .status-dot.ok     { background: #22c55e; }
+    .status-dot.error  { background: #ef4444; }
+    .status-dot.loading { background: #f59e0b; animation: pulse .8s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+
+    .editor-statusbar { grid-column: 1 / -1; grid-row: 2; }
+
+    /* Curseur global pendant le drag */
+    body.dragging-h { cursor: col-resize !important; user-select: none; }
+    body.dragging-v { cursor: row-resize !important; user-select: none; }
+
+    @media (max-width: 700px) {
+      .editor-layout { grid-template-columns: 1fr; grid-template-rows: 1fr 5px 1fr auto; }
+      .editor-left   { grid-column: 1; grid-row: 1; border-bottom: none; }
+      .resizer-v     { grid-column: 1; grid-row: 2; height: 5px; width: auto; cursor: row-resize; }
+      .editor-right  { grid-column: 1; grid-row: 3; }
+    }
+  </style>
+</head>
+<body style="overflow:hidden">
+
+  <!-- ── Header ── -->
+  <header style="position:sticky;top:0;z-index:10">
+    <div class="header-inner">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <a href="index.html" style="color:var(--text-muted);font-size:.82rem;text-decoration:none;display:flex;align-items:center;gap:.3rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px"><polyline points="15 18 9 12 15 6"/></svg>
+          Bibliothèque
+        </a>
+        <span style="color:var(--border2)">·</span>
+        <span style="font-size:.88rem;font-weight:600" id="editorTitle">Éditeur Deneb</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <button class="pane-btn" id="btnFormat" title="Formater le JSON (Ctrl+Shift+F)">Formater</button>
+        <button class="pane-btn" id="btnReset" title="Réinitialiser">Réinitialiser</button>
+        <button class="pane-btn primary" id="btnPropose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;vertical-align:middle;margin-right:3px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          Proposer
+        </button>
+        <button class="theme-toggle" id="themeToggle" aria-label="Thème">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Éditeur ── -->
+  <div class="editor-layout">
+
+    <!-- Gauche : spec + data -->
+    <div class="editor-left">
+      <!-- Spec Vega-Lite -->
+      <div class="editor-pane spec-pane">
+        <div class="editor-pane-header">
+          <span>Spec Vega-Lite</span>
+          <div class="pane-actions">
+            <button class="pane-btn" id="btnCopySpec" title="Copier le spec">Copier</button>
+          </div>
+        </div>
+        <textarea class="editor-textarea" id="specEditor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+      </div>
+
+      <!-- Poignée spec / data -->
+      <div class="resizer-h" id="resizerH"></div>
+
+      <!-- Data -->
+      <div class="editor-pane data-pane">
+        <div class="editor-pane-header">
+          <span>Données (JSON)</span>
+          <div class="pane-actions">
+            <button class="pane-btn" id="btnFormatData">Formater</button>
+          </div>
+        </div>
+        <textarea class="editor-textarea" id="dataEditor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+      </div>
+    </div>
+
+    <!-- Poignée gauche / droite -->
+    <div class="resizer-v" id="resizerV"></div>
+
+    <!-- Droite : preview -->
+    <div class="editor-right">
+      <div class="editor-pane-header">
+        <span>Aperçu</span>
+        <div class="pane-actions">
+          <span id="renderTime" style="font-size:.7rem;color:var(--text-muted);font-weight:400;margin-right:.4rem"></span>
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="btnZoomOut" title="Dézoomer (Ctrl+−)">−</button>
+            <span   class="zoom-level" id="zoomLevel" title="Réinitialiser le zoom (Ctrl+0)">100%</span>
+            <button class="zoom-btn" id="btnZoomIn"  title="Zoomer (Ctrl++)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="preview-area" id="previewArea">
+        <div id="vegaScaleWrap">
+          <div id="vegaContainer"></div>
+        </div>
+      </div>
+      <div class="preview-error" id="previewError"></div>
+    </div>
+
+    <!-- Status bar (span full width) -->
+    <div class="editor-statusbar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Prêt</span>
+      <span style="margin-left:auto" id="specLines"></span>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <script src="theme.js"></script>
+  <script>
+    // ── Spec et données par défaut ────────────────────────────────────────
+    const DEFAULT_SPEC = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": { "name": "dataset" },
+      "mark": { "type": "bar", "cornerRadiusEnd": 4, "tooltip": true },
+      "encoding": {
+        "y": { "field": "category", "type": "nominal", "sort": "-x", "axis": { "title": null } },
+        "x": { "field": "value",    "type": "quantitative", "axis": { "title": null, "grid": false } },
+        "color": {
+          "condition": { "test": "datum.value === 8400", "value": "#AB0000" },
+          "value": "#E57373"
+        },
+        "tooltip": [
+          { "field": "category", "title": "Catégorie" },
+          { "field": "value",    "title": "Valeur", "format": ",.0f" }
+        ]
+      }
+    };
+
+    const DEFAULT_DATA = [
+      { "category": "Paris",    "value": 8400 },
+      { "category": "Lyon",     "value": 5200 },
+      { "category": "Bordeaux", "value": 3900 },
+      { "category": "Nantes",   "value": 3100 },
+      { "category": "Toulouse", "value": 2700 }
+    ];
+
+    // ── État ──────────────────────────────────────────────────────────────
+    const specEditor = document.getElementById('specEditor');
+    const dataEditor = document.getElementById('dataEditor');
+    const statusDot  = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const specLines  = document.getElementById('specLines');
+    const previewErr = document.getElementById('previewError');
+    const renderTime = document.getElementById('renderTime');
+    let _debounce = null;
+    let _currentView = null;
+
+    // ── Initialisation ────────────────────────────────────────────────────
+    function init() {
+      // Charge depuis l'URL (?spec=id) ou depuis localStorage ou défaut
+      const params = new URLSearchParams(location.search);
+      const savedSpec  = localStorage.getItem('cv-deneb-spec');
+      const savedData  = localStorage.getItem('cv-deneb-data');
+
+      specEditor.value = savedSpec  || JSON.stringify(DEFAULT_SPEC, null, 2);
+      dataEditor.value = savedData  || JSON.stringify(DEFAULT_DATA, null, 2);
+
+      updateLineCount();
+      render();
+    }
+
+    // ── Rendu Vega-Lite ───────────────────────────────────────────────────
+    async function render() {
+      setStatus('loading', 'Rendu…');
+      previewErr.classList.remove('visible');
+      specEditor.classList.remove('error');
+
+      let spec, data;
+      try {
+        spec = JSON.parse(specEditor.value);
+      } catch (e) {
+        setStatus('error', 'JSON invalide : ' + e.message);
+        specEditor.classList.add('error');
+        previewErr.textContent = e.message;
+        previewErr.classList.add('visible');
+        return;
+      }
+
+      try {
+        data = JSON.parse(dataEditor.value);
+      } catch (e) {
+        setStatus('error', 'Données JSON invalides : ' + e.message);
+        previewErr.textContent = 'Données : ' + e.message;
+        previewErr.classList.add('visible');
+        return;
+      }
+
+      // Injecte les données dans le spec
+      const specWithData = JSON.parse(JSON.stringify(spec));
+      if (!specWithData.data) specWithData.data = {};
+      if (specWithData.data.name === 'dataset' || !specWithData.data.values) {
+        specWithData.data = { values: Array.isArray(data) ? data : [data] };
+      }
+
+      const t0 = performance.now();
+      try {
+        if (_currentView) {
+          try { _currentView.finalize(); } catch(_) {}
+        }
+        const result = await vegaEmbed('#vegaContainer', specWithData, {
+          actions: false,
+          renderer: 'svg',
+          theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : undefined
+        });
+        _currentView = result.view;
+        const ms = Math.round(performance.now() - t0);
+        setStatus('ok', 'OK');
+        renderTime.textContent = ms + ' ms';
+        localStorage.setItem('cv-deneb-spec', specEditor.value);
+        localStorage.setItem('cv-deneb-data', dataEditor.value);
+      } catch (e) {
+        setStatus('error', e.message);
+        previewErr.textContent = e.message;
+        previewErr.classList.add('visible');
+      }
+    }
+
+    function scheduleRender() {
+      clearTimeout(_debounce);
+      setStatus('loading', 'En attente…');
+      _debounce = setTimeout(render, 600);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function setStatus(type, msg) {
+      statusDot.className = 'status-dot ' + type;
+      statusText.textContent = msg;
+    }
+
+    function updateLineCount() {
+      const lines = specEditor.value.split('\n').length;
+      specLines.textContent = lines + ' ligne' + (lines > 1 ? 's' : '');
+    }
+
+    function formatJSON(textarea) {
+      try {
+        const parsed = JSON.parse(textarea.value);
+        textarea.value = JSON.stringify(parsed, null, 2);
+        textarea.classList.remove('error');
+        return true;
+      } catch (e) {
+        textarea.classList.add('error');
+        return false;
+      }
+    }
+
+    // ── Événements éditeurs ───────────────────────────────────────────────
+    specEditor.addEventListener('input', () => { updateLineCount(); scheduleRender(); });
+    dataEditor.addEventListener('input', scheduleRender);
+
+    // Tab → 2 espaces dans les textareas
+    [specEditor, dataEditor].forEach(ta => {
+      ta.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const s = ta.selectionStart, end = ta.selectionEnd;
+          ta.value = ta.value.substring(0, s) + '  ' + ta.value.substring(end);
+          ta.selectionStart = ta.selectionEnd = s + 2;
+        }
+      });
+    });
+
+    // ── Boutons ───────────────────────────────────────────────────────────
+    document.getElementById('btnFormat').addEventListener('click', () => {
+      if (formatJSON(specEditor)) render();
+    });
+    document.getElementById('btnFormatData').addEventListener('click', () => {
+      if (formatJSON(dataEditor)) render();
+    });
+
+    document.getElementById('btnCopySpec').addEventListener('click', () => {
+      navigator.clipboard.writeText(specEditor.value).then(() => {
+        const btn = document.getElementById('btnCopySpec');
+        btn.textContent = '✓ Copié';
+        setTimeout(() => { btn.textContent = 'Copier'; }, 1500);
+      });
+    });
+
+    document.getElementById('btnReset').addEventListener('click', () => {
+      if (!confirm('Réinitialiser l\'éditeur ?')) return;
+      specEditor.value = JSON.stringify(DEFAULT_SPEC, null, 2);
+      dataEditor.value = JSON.stringify(DEFAULT_DATA, null, 2);
+      localStorage.removeItem('cv-deneb-spec');
+      localStorage.removeItem('cv-deneb-data');
+      updateLineCount();
+      render();
+    });
+
+    // Proposer → redirige vers submit.html avec le spec en sessionStorage
+    document.getElementById('btnPropose').addEventListener('click', () => {
+      try {
+        JSON.parse(specEditor.value); // valide avant de rediriger
+      } catch (e) {
+        alert('Le spec Vega-Lite contient des erreurs JSON.');
+        return;
+      }
+      sessionStorage.setItem('cv-propose-code', specEditor.value);
+      sessionStorage.setItem('cv-propose-type', 'deneb');
+      location.href = 'submit.html?from=editor';
+    });
+
+    // Raccourci Ctrl+Shift+F = formater
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+        e.preventDefault();
+        if (formatJSON(specEditor)) render();
+      }
+      // Ctrl+Enter = forcer le rendu
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        render();
+      }
+    });
+
+    // ── Resize panels ────────────────────────────────────────────────────
+    const layout   = document.querySelector('.editor-layout');
+    const resizerV = document.getElementById('resizerV');
+    const resizerH = document.getElementById('resizerH');
+
+    // Restaurer tailles sauvegardées
+    const savedSplitH = localStorage.getItem('cv-split-h');
+    const savedDataH  = localStorage.getItem('cv-data-h');
+    if (savedSplitH) layout.style.setProperty('--split-h', savedSplitH);
+    if (savedDataH)  layout.style.setProperty('--data-h',  savedDataH);
+
+    // Poignée verticale (gauche ↔ droite)
+    resizerV.addEventListener('mousedown', e => {
+      e.preventDefault();
+      resizerV.classList.add('dragging');
+      document.body.classList.add('dragging-h');
+
+      const layoutRect = layout.getBoundingClientRect();
+
+      function onMove(e) {
+        const pct = ((e.clientX - layoutRect.left) / layoutRect.width * 100).toFixed(1);
+        const clamped = Math.min(Math.max(pct, 15), 80) + '%';
+        layout.style.setProperty('--split-h', clamped);
+      }
+      function onUp() {
+        resizerV.classList.remove('dragging');
+        document.body.classList.remove('dragging-h');
+        localStorage.setItem('cv-split-h', getComputedStyle(layout).getPropertyValue('--split-h').trim());
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+
+    // Poignée horizontale (spec ↕ data)
+    resizerH.addEventListener('mousedown', e => {
+      e.preventDefault();
+      resizerH.classList.add('dragging');
+      document.body.classList.add('dragging-v');
+
+      const leftRect  = document.querySelector('.editor-left').getBoundingClientRect();
+      const startY    = e.clientY;
+      const startH    = document.querySelector('.data-pane').getBoundingClientRect().height;
+
+      function onMove(e) {
+        const delta   = startY - e.clientY;          // tirer vers le haut agrandit data
+        const newH    = Math.min(Math.max(startH + delta, 60), leftRect.height - 120);
+        layout.style.setProperty('--data-h', newH + 'px');
+      }
+      function onUp() {
+        resizerH.classList.remove('dragging');
+        document.body.classList.remove('dragging-v');
+        localStorage.setItem('cv-data-h', getComputedStyle(layout).getPropertyValue('--data-h').trim());
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+    });
+
+    // ── Zoom ──────────────────────────────────────────────────────────────
+    const ZOOM_STEPS = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300];
+    let _zoom = 100;
+
+    function applyZoom(pct) {
+      _zoom = Math.min(Math.max(pct, ZOOM_STEPS[0]), ZOOM_STEPS[ZOOM_STEPS.length - 1]);
+      document.getElementById('vegaScaleWrap').style.transform = `scale(${_zoom / 100})`;
+      document.getElementById('zoomLevel').textContent = _zoom + '%';
+      localStorage.setItem('cv-deneb-zoom', _zoom);
+    }
+
+    function zoomIn() {
+      const next = ZOOM_STEPS.find(s => s > _zoom);
+      if (next) applyZoom(next);
+    }
+    function zoomOut() {
+      const prev = [...ZOOM_STEPS].reverse().find(s => s < _zoom);
+      if (prev) applyZoom(prev);
+    }
+
+    document.getElementById('btnZoomIn').addEventListener('click', zoomIn);
+    document.getElementById('btnZoomOut').addEventListener('click', zoomOut);
+    document.getElementById('zoomLevel').addEventListener('click', () => applyZoom(100));
+
+    // Ctrl+scroll sur la zone de preview
+    document.getElementById('previewArea').addEventListener('wheel', e => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      e.deltaY < 0 ? zoomIn() : zoomOut();
+    }, { passive: false });
+
+    // Raccourcis clavier Ctrl++ / Ctrl+- / Ctrl+0
+    document.addEventListener('keydown', e => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
+      if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomOut(); }
+      if (e.key === '0')                  { e.preventDefault(); applyZoom(100); }
+    });
+
+    // Restaurer le zoom sauvegardé
+    const savedZoom = parseInt(localStorage.getItem('cv-deneb-zoom'), 10);
+    if (savedZoom && ZOOM_STEPS.includes(savedZoom)) applyZoom(savedZoom);
+
+    // ── Re-rendu si changement de thème ──────────────────────────────────
+    const themeObserver = new MutationObserver(() => render());
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // ── Démarrage ─────────────────────────────────────────────────────────
+    init();
+  </script>
+</body>
+</html>
