@@ -57,6 +57,12 @@
         <div class="header-search">
 <input type="text" id="searchInput" placeholder="Rechercher une mesure…"/>
         </div>
+        <div class="type-tabbar" id="typeTabs">
+          <button class="type-tab active" data-type="dax">DAX<span class="type-tab-count" id="countDax">—</span></button>
+          <button class="type-tab" data-type="svg">SVG<span class="type-tab-count" id="countSvg">—</span></button>
+          <button class="type-tab" data-type="html">HTML<span class="type-tab-count" id="countHtml">—</span></button>
+          <button class="type-tab" data-type="deneb">Deneb<span class="type-tab-count" id="countDeneb">—</span></button>
+        </div>
         <div class="header-actions">
           <a href="submit.html" class="btn-new">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -67,38 +73,6 @@
     </header>
 
     <main>
-
-      <!-- Type tabs -->
-      <div class="type-tabbar" id="typeTabs">
-        <button class="type-tab active" data-type="dax">
-          <span class="type-tab-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-          </span>
-          <span class="type-tab-label">DAX</span>
-          <span class="type-tab-count" id="countDax">—</span>
-        </button>
-        <button class="type-tab" data-type="svg">
-          <span class="type-tab-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-          </span>
-          <span class="type-tab-label">SVG</span>
-          <span class="type-tab-count" id="countSvg">—</span>
-        </button>
-        <button class="type-tab" data-type="html">
-          <span class="type-tab-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          </span>
-          <span class="type-tab-label">HTML</span>
-          <span class="type-tab-count" id="countHtml">—</span>
-        </button>
-        <button class="type-tab" data-type="deneb">
-          <span class="type-tab-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          </span>
-          <span class="type-tab-label">Deneb</span>
-          <span class="type-tab-count" id="countDeneb">—</span>
-        </button>
-      </div>
 
       <!-- Cartes SVG (images complètes) -->
       <section id="imageSection" style="display:none">
