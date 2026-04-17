@@ -805,6 +805,35 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
 }
 .btn-delete:hover { border-color: var(--danger); color: var(--danger); }
 
+/* ===== SIDEBAR ADMIN LINK ===== */
+.sb-admin-link {
+  margin-top: .25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+}
+.sb-admin-link:not(.active) {
+  color: var(--accent) !important;
+  border-color: rgba(171,0,0,.2);
+  background: rgba(171,0,0,.05);
+}
+.sb-admin-link:not(.active):hover {
+  border-color: rgba(171,0,0,.4);
+  background: rgba(171,0,0,.1);
+  color: var(--accent) !important;
+}
+[data-theme="dark"] .sb-admin-link:not(.active) {
+  border-color: rgba(204,17,17,.25);
+  background: rgba(204,17,17,.08);
+}
+
+/* ===== PENDING ITEM ARROW ===== */
+.pending-arrow {
+  color: var(--text-muted); font-size: .9rem; flex-shrink: 0;
+  transition: transform .15s;
+}
+.pending-item-row:hover .pending-arrow { transform: translateX(3px); color: var(--accent); }
+.pending-item-row:hover { background: var(--surface2); margin: 0 -.5rem; padding-left: .5rem; padding-right: .5rem; border-radius: var(--radius-xs); }
+
 /* ===== AUTH OVERLAY ===== */
 .auth-overlay {
   position: fixed; inset: 0; z-index: 1000;
