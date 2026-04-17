@@ -1,28 +1,134 @@
 // ===== ADMIN.JS — CustomViz =====
 
-let allFunctions = [];
+let allApproved = [];
 let pendingDeleteId = null;
 
-// ---- Chargement ----
+// ============================================================
+//  AUTH
+// ============================================================
+function isAdmin() {
+  return sessionStorage.getItem('cv-admin') === '1';
+}
+
+function showAuthOverlay() {
+  document.getElementById('authOverlay').classList.add('open');
+  document.getElementById('authError').textContent = '';
+  document.getElementById('authInput').value = '';
+}
+
+function hideAuthOverlay() {
+  document.getElementById('authOverlay').classList.remove('open');
+}
+
+document.getElementById('authSubmitBtn').addEventListener('click', checkPassword);
+document.getElementById('authInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPassword();
+});
+
+function checkPassword() {
+  const val = document.getElementById('authInput').value;
+  if (val === ADMIN_PASSWORD) {
+    sessionStorage.setItem('cv-admin', '1');
+    hideAuthOverlay();
+    init();
+  } else {
+    document.getElementById('authError').textContent = 'Mot de passe incorrect.';
+    document.getElementById('authInput').value = '';
+    document.getElementById('authInput').focus();
+  }
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+function init() {
+  loadPendingList();
+  loadAdminList();
+}
+
+// ============================================================
+//  PENDING (en attente de validation)
+// ============================================================
+async function loadPendingList() {
+  const { data, error } = await db
+    .from('fonctions')
+    .select('id, nom, categorie, created_at')
+    .eq('statut', 'pending')
+    .order('created_at', { ascending: true });
+
+  const container = document.getElementById('pendingList');
+  if (error) {
+    container.innerHTML = `<p style="color:var(--danger);font-family:var(--font-mono);font-size:.82rem">Erreur : ${error.message}</p>`;
+    return;
+  }
+
+  const badge = document.getElementById('pendingBadge');
+  const count = (data || []).length;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+
+  if (count === 0) {
+    container.innerHTML = `<p style="color:var(--text-muted);padding:1rem 0;font-size:.85rem">Aucune mesure en attente.</p>`;
+    return;
+  }
+
+  container.innerHTML = data.map(fn => `
+    <div class="admin-item pending-item" data-id="${fn.id}">
+      <div class="admin-item-info">
+        <div class="admin-item-name">${escHtml(fn.nom)}</div>
+        <div class="admin-item-cat">${fn.categorie || 'Général'} · <span class="badge-pending">En attente</span></div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-shrink:0">
+        <button class="btn-approve" data-id="${fn.id}">✓ Approuver</button>
+        <button class="btn-reject"  data-id="${fn.id}">✕ Rejeter</button>
+      </div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.btn-approve').forEach(btn => {
+    btn.addEventListener('click', () => approveMeasure(btn.dataset.id));
+  });
+  container.querySelectorAll('.btn-reject').forEach(btn => {
+    btn.addEventListener('click', () => rejectMeasure(btn.dataset.id));
+  });
+}
+
+async function approveMeasure(id) {
+  const { error } = await db
+    .from('fonctions')
+    .update({ statut: 'approved' })
+    .eq('id', id);
+  if (!error) { loadPendingList(); loadAdminList(); }
+}
+
+async function rejectMeasure(id) {
+  const { error } = await db.from('fonctions').delete().eq('id', id);
+  if (!error) loadPendingList();
+}
+
+// ============================================================
+//  APPROVED LIST
+// ============================================================
 async function loadAdminList() {
   const { data, error } = await db
     .from('fonctions')
     .select('id, nom, categorie, created_at')
+    .eq('statut', 'approved')
     .order('created_at', { ascending: false });
 
   if (error) {
     document.getElementById('adminList').innerHTML =
-      `<p style="color:var(--danger);font-family:var(--font-mono);font-size:0.82rem">Erreur : ${error.message}</p>`;
+      `<p style="color:var(--danger);font-family:var(--font-mono);font-size:.82rem">Erreur : ${error.message}</p>`;
     return;
   }
-  allFunctions = data || [];
-  renderAdminList(allFunctions);
+  allApproved = data || [];
+  renderAdminList(allApproved);
 }
 
 function renderAdminList(list) {
   const container = document.getElementById('adminList');
   if (list.length === 0) {
-    container.innerHTML = `<p style="color:var(--text-muted);padding:1rem 0;font-size:0.85rem">Aucune mesure pour l'instant.</p>`;
+    container.innerHTML = `<p style="color:var(--text-muted);padding:1rem 0;font-size:.85rem">Aucune mesure approuvée.</p>`;
     return;
   }
   container.innerHTML = list.map(fn => `
@@ -46,25 +152,28 @@ function renderAdminList(list) {
 // ---- Recherche ----
 document.getElementById('adminSearch').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
-  const filtered = allFunctions.filter(f =>
+  renderAdminList(allApproved.filter(f =>
     f.nom.toLowerCase().includes(q) ||
     (f.categorie || '').toLowerCase().includes(q)
-  );
-  renderAdminList(filtered);
+  ));
 });
 
-// ---- Live SVG preview ----
+// ============================================================
+//  LIVE SVG PREVIEW
+// ============================================================
 document.getElementById('inputSvg').addEventListener('input', e => {
   const preview = document.getElementById('svgLivePreview');
   const val = e.target.value.trim();
   if (val) {
     preview.innerHTML = val;
   } else {
-    preview.innerHTML = `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.76rem">L'aperçu SVG apparaîtra ici</span>`;
+    preview.innerHTML = `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.76rem">L'aperçu SVG apparaîtra ici</span>`;
   }
 });
 
-// ---- Ajout ----
+// ============================================================
+//  AJOUT (admin → approuvé directement)
+// ============================================================
 document.getElementById('btnAjouter').addEventListener('click', async () => {
   const nom         = document.getElementById('inputNom').value.trim();
   const categorie   = document.getElementById('inputCategorie').value.trim();
@@ -84,7 +193,7 @@ document.getElementById('btnAjouter').addEventListener('click', async () => {
 
   const { error } = await db
     .from('fonctions')
-    .insert([{ nom, categorie, description, code, svg_preview }]);
+    .insert([{ nom, categorie, description, code, svg_preview, statut: 'approved' }]);
 
   if (error) {
     msg.textContent = `❌ Erreur : ${error.message}`;
@@ -95,19 +204,19 @@ document.getElementById('btnAjouter').addEventListener('click', async () => {
   msg.textContent = '✓ Mesure ajoutée avec succès !';
   msg.className = 'form-msg success';
 
-  document.getElementById('inputNom').value = '';
-  document.getElementById('inputCategorie').value = '';
-  document.getElementById('inputDesc').value = '';
-  document.getElementById('inputCode').value = '';
-  document.getElementById('inputSvg').value = '';
+  ['inputNom','inputCategorie','inputDesc','inputCode','inputSvg'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
   document.getElementById('svgLivePreview').innerHTML =
-    `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.76rem">L'aperçu SVG apparaîtra ici</span>`;
+    `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.76rem">L'aperçu SVG apparaîtra ici</span>`;
 
   setTimeout(() => { msg.textContent = ''; }, 3000);
   loadAdminList();
 });
 
-// ---- Suppression ----
+// ============================================================
+//  SUPPRESSION
+// ============================================================
 document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
   if (!pendingDeleteId) return;
   const { error } = await db.from('fonctions').delete().eq('id', pendingDeleteId);
@@ -127,6 +236,9 @@ function closeDeleteModal() {
   pendingDeleteId = null;
 }
 
+// ============================================================
+//  UTILS
+// ============================================================
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -142,4 +254,11 @@ if (sbToggle && sidebar) {
   });
 }
 
-loadAdminList();
+// ============================================================
+//  START
+// ============================================================
+if (isAdmin()) {
+  init();
+} else {
+  showAuthOverlay();
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin — CustomViz</title>
+  <title>Proposer une mesure — CustomViz</title>
   <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('cv-theme') || 'light');</script>
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
@@ -24,9 +24,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Bibliothèque
       </a>
-      <a href="admin.html" class="sb-nav-link active">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Ajouter
+      <a href="submit.html" class="sb-nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        Proposer
       </a>
     </div>
 
@@ -47,7 +47,7 @@
         <button class="sb-toggle" id="sbToggle" aria-label="Menu">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <div style="font-size:.9rem;font-weight:600;color:var(--text-muted)">Administration</div>
+        <div style="font-size:.9rem;font-weight:600;color:var(--text-muted)">Proposer une mesure</div>
         <div class="header-actions">
           <a href="index.html" class="btn-new" style="background:var(--surface2);color:var(--text-sub);border:1px solid var(--border)">
             ← Bibliothèque
@@ -59,23 +59,12 @@
     <main style="max-width:780px">
 
       <div class="admin-hero">
-        <h1>Gestion des <span class="accent-txt">Mesures</span></h1>
-        <p>Ajoutez et gérez vos mesures DAX avec aperçu SVG.</p>
+        <h1>Proposer une <span class="accent-txt">Mesure</span></h1>
+        <p>Votre proposition sera examinée avant d'être publiée dans la bibliothèque.</p>
       </div>
 
-      <!-- ── Mesures en attente ── -->
-      <div class="card">
-        <h2 class="card-title">
-          ✦ En attente de validation
-          <span class="badge-count" id="pendingBadge" style="display:none">0</span>
-        </h2>
-        <div id="pendingList" class="admin-list">
-          <div class="loading"><div class="spinner"></div><p>Chargement…</p></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">✦ Nouvelle mesure</h2>
+      <div class="card" id="submitCard">
+        <h2 class="card-title">✦ Nouvelle proposition</h2>
         <div class="form-grid">
           <div class="field">
             <label>Nom de la mesure *</label>
@@ -107,56 +96,78 @@
         </div>
         <div class="form-footer">
           <span class="form-msg" id="formMsg"></span>
-          <button class="btn-primary" id="btnAjouter">Ajouter la mesure</button>
+          <button class="btn-primary" id="btnSoumettre">Soumettre la proposition</button>
         </div>
       </div>
 
-      <div class="card">
-        <h2 class="card-title">✦ Mesures existantes</h2>
-        <div style="position:relative;margin-bottom:1.25rem">
-          <svg style="position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:14px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="adminSearch" placeholder="Filtrer les mesures…" style="padding-left:2.2rem"/>
-        </div>
-        <div id="adminList" class="admin-list">
-          <div class="loading"><div class="spinner"></div><p>Chargement…</p></div>
-        </div>
+      <!-- Success state -->
+      <div class="card" id="successCard" style="display:none;text-align:center;padding:2.5rem 2rem">
+        <div style="font-size:2.5rem;margin-bottom:1rem">✓</div>
+        <h2 style="margin-bottom:.5rem">Proposition envoyée !</h2>
+        <p style="color:var(--text-sub);font-size:.9rem;line-height:1.6;margin-bottom:1.5rem">
+          Votre mesure a été soumise et sera publiée après validation par un administrateur.
+        </p>
+        <a href="index.html" class="btn-primary" style="display:inline-block;text-decoration:none">← Retour à la bibliothèque</a>
       </div>
 
     </main>
   </div>
 
-  <!-- Auth overlay -->
-  <div class="auth-overlay" id="authOverlay">
-    <div class="auth-box">
-      <div class="auth-logo">
-        <img src="datatorii_logo.svg" alt="Datatorii" style="width:38px;height:38px;object-fit:contain"/>
-      </div>
-      <h2 class="auth-title">Administration</h2>
-      <p class="auth-sub">Entrez le mot de passe pour accéder à cette page.</p>
-      <input type="password" id="authInput" class="auth-input" placeholder="Mot de passe…" autofocus/>
-      <p class="auth-error" id="authError"></p>
-      <button class="btn-primary" id="authSubmitBtn" style="width:100%">Accéder</button>
-    </div>
-  </div>
-
-  <!-- Confirm delete -->
-  <div class="modal-overlay" id="deleteOverlay">
-    <div class="modal modal-small">
-      <div class="modal-header">
-        <h2>Supprimer la mesure ?</h2>
-        <button class="modal-close" id="deleteCancel">✕</button>
-      </div>
-      <p style="color:var(--text-sub);margin-bottom:1.5rem;font-size:.86rem;line-height:1.6">Cette action est irréversible.</p>
-      <div style="display:flex;gap:.65rem;justify-content:flex-end">
-        <button class="btn-ghost" id="deleteCancelBtn">Annuler</button>
-        <button class="btn-danger" id="deleteConfirmBtn">Supprimer</button>
-      </div>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="theme.js"></script>
-  <script src="admin.js"></script>
+  <script>
+    // Live SVG preview
+    document.getElementById('inputSvg').addEventListener('input', e => {
+      const preview = document.getElementById('svgLivePreview');
+      const val = e.target.value.trim();
+      preview.innerHTML = val
+        ? val
+        : `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.73rem">L'aperçu SVG apparaîtra ici</span>`;
+    });
+
+    // Submit
+    document.getElementById('btnSoumettre').addEventListener('click', async () => {
+      const nom         = document.getElementById('inputNom').value.trim();
+      const categorie   = document.getElementById('inputCategorie').value.trim();
+      const description = document.getElementById('inputDesc').value.trim();
+      const code        = document.getElementById('inputCode').value.trim();
+      const svg_preview = document.getElementById('inputSvg').value.trim() || null;
+      const msg         = document.getElementById('formMsg');
+
+      if (!nom || !categorie || !description || !code) {
+        msg.textContent = '⚠ Tous les champs obligatoires doivent être remplis.';
+        msg.className = 'form-msg error';
+        return;
+      }
+
+      msg.textContent = 'Envoi en cours…';
+      msg.className = 'form-msg';
+
+      const { error } = await db
+        .from('fonctions')
+        .insert([{ nom, categorie, description, code, svg_preview, statut: 'pending' }]);
+
+      if (error) {
+        msg.textContent = `❌ Erreur : ${error.message}`;
+        msg.className = 'form-msg error';
+        return;
+      }
+
+      document.getElementById('submitCard').style.display = 'none';
+      document.getElementById('successCard').style.display = '';
+    });
+
+    // Mobile sidebar
+    const sbToggle = document.getElementById('sbToggle');
+    const sidebar  = document.getElementById('sidebar');
+    if (sbToggle && sidebar) {
+      sbToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+      document.addEventListener('click', e => {
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== sbToggle)
+          sidebar.classList.remove('open');
+      });
+    }
+  </script>
 </body>
 </html>

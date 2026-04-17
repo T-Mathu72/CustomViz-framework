@@ -16,7 +16,7 @@ function categoryColor(cat) {
 // ---- Chargement ----
 async function loadFunctions() {
   const { data, error } = await db
-    .from('fonctions').select('*').order('created_at', { ascending: false });
+    .from('fonctions').select('*').eq('statut', 'approved').order('created_at', { ascending: false });
 
   if (error) {
     document.getElementById('grid').innerHTML =
