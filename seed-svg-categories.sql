@@ -7,6 +7,7 @@
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS sous_categorie TEXT;
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'svg';
 ALTER TABLE fonctions RENAME COLUMN svg_preview TO preview;
+ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS original_id UUID REFERENCES fonctions(id) ON DELETE SET NULL;
 
 -- Contrainte unique sur nom pour éviter les doublons lors des re-exécutions
 ALTER TABLE fonctions ADD CONSTRAINT fonctions_nom_unique UNIQUE (nom);

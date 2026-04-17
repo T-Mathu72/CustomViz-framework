@@ -59,12 +59,12 @@
     <main style="max-width:780px">
 
       <div class="admin-hero">
-        <h1>Proposer une <span class="accent-txt">Mesure</span></h1>
-        <p>Votre proposition sera examinée avant d'être publiée dans la bibliothèque.</p>
+        <h1 id="pageTitle">Proposer une <span class="accent-txt">Mesure</span></h1>
+        <p id="pageSubtitle">Votre proposition sera examinée avant d'être publiée dans la bibliothèque.</p>
       </div>
 
       <div class="card" id="submitCard">
-        <h2 class="card-title">✦ Nouvelle proposition</h2>
+        <h2 class="card-title" id="cardTitle">✦ Nouvelle proposition</h2>
         <div class="form-grid">
           <div class="field">
             <label>Nom *</label>
@@ -144,16 +144,55 @@
       document.getElementById('codeLabelType').textContent = labels[e.target.value] || 'DAX';
     });
 
+    // ── Mode modification : pré-remplissage depuis ?edit=<id> ──
+    let _originalId = null;
+
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const editId = params.get('edit');
+      if (!editId) return;
+
+      const { data, error } = await db
+        .from('fonctions')
+        .select('*')
+        .eq('id', editId)
+        .single();
+
+      if (error || !data) return;
+
+      _originalId = editId;
+
+      // Mettre à jour les titres
+      document.getElementById('pageTitle').innerHTML =
+        `Modifier <span class="accent-txt">${data.nom}</span>`;
+      document.getElementById('pageSubtitle').textContent =
+        'Votre modification sera examinée par un administrateur avant d\'être appliquée.';
+      document.getElementById('cardTitle').textContent = '✦ Proposition de modification';
+
+      // Pré-remplir les champs
+      document.getElementById('inputNom').value          = data.nom || '';
+      document.getElementById('inputType').value         = data.type || 'svg';
+      document.getElementById('inputCategorie').value    = data.categorie || '';
+      document.getElementById('inputSousCategorie').value = data.sous_categorie || '';
+      document.getElementById('inputDesc').value         = data.description || '';
+      document.getElementById('inputCode').value         = data.code || '';
+      document.getElementById('inputSvg').value          = data.preview || '';
+
+      // Déclencher le live preview et le label code
+      document.getElementById('inputSvg').dispatchEvent(new Event('input'));
+      document.getElementById('inputType').dispatchEvent(new Event('change'));
+    })();
+
     // Submit
     document.getElementById('btnSoumettre').addEventListener('click', async () => {
-      const nom         = document.getElementById('inputNom').value.trim();
+      const nom            = document.getElementById('inputNom').value.trim();
       const type           = document.getElementById('inputType').value;
       const categorie      = document.getElementById('inputCategorie').value.trim();
       const sous_categorie = document.getElementById('inputSousCategorie').value.trim() || null;
-      const description = document.getElementById('inputDesc').value.trim();
-      const code        = document.getElementById('inputCode').value.trim();
-      const preview = document.getElementById('inputSvg').value.trim() || null;
-      const msg         = document.getElementById('formMsg');
+      const description    = document.getElementById('inputDesc').value.trim();
+      const code           = document.getElementById('inputCode').value.trim();
+      const preview        = document.getElementById('inputSvg').value.trim() || null;
+      const msg            = document.getElementById('formMsg');
 
       if (!nom || !categorie || !description || !code) {
         msg.textContent = '⚠ Tous les champs obligatoires doivent être remplis.';
@@ -164,9 +203,10 @@
       msg.textContent = 'Envoi en cours…';
       msg.className = 'form-msg';
 
-      const { error } = await db
-        .from('fonctions')
-        .insert([{ nom, type, categorie, sous_categorie, description, code, preview, statut: 'pending' }]);
+      const payload = { nom, type, categorie, sous_categorie, description, code, preview, statut: 'pending' };
+      if (_originalId) payload.original_id = _originalId;
+
+      const { error } = await db.from('fonctions').insert([payload]);
 
       if (error) {
         msg.textContent = `❌ Erreur : ${error.message}`;

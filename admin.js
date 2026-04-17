@@ -52,7 +52,7 @@ function init() {
 async function loadPendingList() {
   const { data, error } = await db
     .from('fonctions')
-    .select('id, nom, categorie, created_at')
+    .select('id, nom, categorie, created_at, original_id')
     .eq('statut', 'pending')
     .order('created_at', { ascending: true });
 
@@ -76,7 +76,12 @@ async function loadPendingList() {
     <div class="admin-item pending-item pending-item-row" data-id="${fn.id}" style="cursor:pointer">
       <div class="admin-item-info">
         <div class="admin-item-name">${escHtml(fn.nom)}</div>
-        <div class="admin-item-cat">${fn.categorie || 'Général'} · <span class="badge-pending">En attente</span></div>
+        <div class="admin-item-cat">
+          ${fn.categorie || 'Général'} ·
+          ${fn.original_id
+            ? `<span class="badge-modification">Modification</span>`
+            : `<span class="badge-pending">En attente</span>`}
+        </div>
       </div>
       <span class="pending-arrow">→</span>
     </div>
@@ -106,6 +111,17 @@ async function openProposalModal(id, mode = 'pending') {
   document.getElementById('propModalName').textContent = data.nom;
   document.getElementById('propModalDesc').textContent = data.description || '';
   document.getElementById('propModalCode').textContent = data.code || '';
+
+  // Badge modification
+  const existingBadge = document.getElementById('propModificationBadge');
+  if (existingBadge) existingBadge.remove();
+  if (data.original_id) {
+    const badge = document.createElement('div');
+    badge.id = 'propModificationBadge';
+    badge.style.cssText = 'margin-bottom:.75rem;font-size:.78rem;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:5px 10px;display:inline-block';
+    badge.textContent = 'Proposition de modification d\'un visuel existant';
+    document.getElementById('propModalDesc').insertAdjacentElement('beforebegin', badge);
+  }
 
   const svgWrap = document.getElementById('propSvgPreview');
   svgWrap.innerHTML = data.preview
@@ -178,11 +194,30 @@ document.getElementById('proposalOverlay').addEventListener('click', e => {
 });
 
 async function approveMeasure(id) {
-  const { error } = await db
-    .from('fonctions')
-    .update({ statut: 'approved' })
-    .eq('id', id);
-  if (!error) { loadPendingList(); loadAdminList(); }
+  const { data: proposal } = await db.from('fonctions').select('*').eq('id', id).single();
+
+  if (proposal?.original_id) {
+    // Modification : mettre à jour le visuel original puis supprimer la proposition
+    const { error } = await db.from('fonctions')
+      .update({
+        nom:            proposal.nom,
+        type:           proposal.type,
+        categorie:      proposal.categorie,
+        sous_categorie: proposal.sous_categorie,
+        description:    proposal.description,
+        code:           proposal.code,
+        preview:        proposal.preview
+      })
+      .eq('id', proposal.original_id);
+    if (!error) {
+      await db.from('fonctions').delete().eq('id', id);
+      loadPendingList();
+      loadAdminList();
+    }
+  } else {
+    const { error } = await db.from('fonctions').update({ statut: 'approved' }).eq('id', id);
+    if (!error) { loadPendingList(); loadAdminList(); }
+  }
 }
 
 async function rejectMeasure(id) {

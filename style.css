@@ -725,6 +725,10 @@ main { padding: 2rem 2rem 5rem; flex: 1; }
 }
 .modal-close:hover { color: var(--text); border-color: var(--border2); }
 .modal-desc { color: var(--text-sub); font-size: .84rem; line-height: 1.68; }
+.modal-footer { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+.btn-propose-edit { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: transparent; transition: color .15s, border-color .15s, background .15s; cursor: pointer; }
+.btn-propose-edit:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
+.btn-propose-edit svg { width: 13px; height: 13px; flex-shrink: 0; }
 
 /* Tabs */
 .modal-tabs { display: flex; border-bottom: 1px solid var(--border); margin: 1rem 0; }
@@ -982,6 +986,12 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
   font-family: var(--font-mono); vertical-align: middle;
 }
 [data-theme="dark"] .badge-pending { background: rgba(245,158,11,.12); color: #f59e0b; }
+.badge-modification {
+  display: inline-block; background: rgba(99,102,241,.12); color: #4f46e5;
+  border-radius: 20px; padding: .05rem .45rem; font-size: .65rem; font-weight: 600;
+  font-family: var(--font-mono); vertical-align: middle;
+}
+[data-theme="dark"] .badge-modification { background: rgba(129,140,248,.12); color: #818cf8; }
 
 .badge-count {
   display: inline-flex; align-items: center; justify-content: center;
