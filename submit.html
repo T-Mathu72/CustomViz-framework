@@ -73,15 +73,18 @@
           <div class="field">
             <label>Type *</label>
             <select id="inputType">
-              <option value="dax">DAX</option>
               <option value="svg">SVG</option>
               <option value="html">HTML</option>
               <option value="deneb">Deneb / Vega-Lite</option>
             </select>
           </div>
-          <div class="field full">
-            <label>Sous-catégorie *</label>
-            <input type="text" id="inputCategorie" placeholder="ex: KPI, Jauges, Indicateur…"/>
+          <div class="field">
+            <label>Catégorie *<span class="field-hint" style="display:block;margin-top:.15rem">Table · Card · Slicer</span></label>
+            <input type="text" id="inputCategorie" placeholder="ex: Table, Card, Slicer"/>
+          </div>
+          <div class="field">
+            <label>Sous-catégorie<span class="field-hint" style="display:block;margin-top:.15rem">Jauge · Tendance · Comparaison…</span></label>
+            <input type="text" id="inputSousCategorie" placeholder="ex: Jauge, Tendance…"/>
           </div>
           <div class="field full">
             <label>Description *</label>
@@ -144,8 +147,9 @@
     // Submit
     document.getElementById('btnSoumettre').addEventListener('click', async () => {
       const nom         = document.getElementById('inputNom').value.trim();
-      const type        = document.getElementById('inputType').value;
-      const categorie   = document.getElementById('inputCategorie').value.trim();
+      const type           = document.getElementById('inputType').value;
+      const categorie      = document.getElementById('inputCategorie').value.trim();
+      const sous_categorie = document.getElementById('inputSousCategorie').value.trim() || null;
       const description = document.getElementById('inputDesc').value.trim();
       const code        = document.getElementById('inputCode').value.trim();
       const svg_preview = document.getElementById('inputSvg').value.trim() || null;
@@ -162,7 +166,7 @@
 
       const { error } = await db
         .from('fonctions')
-        .insert([{ nom, type, categorie, description, code, svg_preview, statut: 'pending' }]);
+        .insert([{ nom, type, categorie, sous_categorie, description, code, svg_preview, statut: 'pending' }]);
 
       if (error) {
         msg.textContent = `❌ Erreur : ${error.message}`;

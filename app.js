@@ -1,8 +1,9 @@
 // ===== APP.JS — CustomViz DAX Library =====
 
-let allFunctions = [];
-let activeCategory = 'all';
-let activeType = 'dax'; // 'dax' | 'svg' | 'html' | 'deneb'
+let allFunctions        = [];
+let activeType          = 'svg'; // 'svg' | 'html' | 'deneb'
+let activeCategory      = 'all';
+let activeSousCategorie = 'all';
 
 // ---- Palette de couleurs par catégorie ----
 const PALETTE = ['#5b6ef5','#7c3aed','#0891b2','#059669','#d97706','#db2777','#dc2626','#0284c7','#7c3aed','#4f46e5'];
@@ -29,8 +30,7 @@ async function loadFunctions() {
   const cats = [...new Set(allFunctions.map(f => f.categorie).filter(Boolean))];
 
   // Type counts
-  const typeMap = { dax: isDax, svg: isSvg, html: isHtml, deneb: isDeneb };
-  Object.entries(typeMap).forEach(([type, fn]) => {
+  Object.entries(typeFilter).forEach(([type, fn]) => {
     const el = document.getElementById('count' + type.charAt(0).toUpperCase() + type.slice(1));
     if (el) el.textContent = allFunctions.filter(fn).length;
   });
@@ -38,16 +38,15 @@ async function loadFunctions() {
   buildTypeTabs();
   buildSidebarCats();
   buildFilters();
-  buildImageSection();
   applyFilters();
 }
 
 // ---- Helpers type (utilise la colonne `type` en DB) ----
-const isDax   = f => !f.type || f.type === 'dax';
-const isSvg   = f => f.type === 'svg';
+// Les anciennes mesures sans type ou type='dax' tombent dans SVG par défaut
+const isSvg   = f => !f.type || f.type === 'dax' || f.type === 'svg';
 const isHtml  = f => f.type === 'html';
 const isDeneb = f => f.type === 'deneb';
-const typeFilter = { dax: isDax, svg: isSvg, html: isHtml, deneb: isDeneb };
+const typeFilter = { svg: isSvg, html: isHtml, deneb: isDeneb };
 
 // ---- Type tabs ----
 function buildTypeTabs() {
@@ -59,6 +58,7 @@ function buildTypeTabs() {
 function switchType(type) {
   activeType = type;
   activeCategory = 'all';
+  activeSousCategorie = 'all';
 
   document.querySelectorAll('.type-tab').forEach(b =>
     b.classList.toggle('active', b.dataset.type === type));
@@ -76,7 +76,7 @@ function switchType(type) {
     if (titleEl) titleEl.textContent =
       type === 'html'  ? 'Visuels HTML' :
       type === 'deneb' ? 'Visuels Deneb / Vega-Lite' :
-      'Mesures DAX';
+      'Visuels SVG';
   }
 
   buildSidebarCats();
@@ -84,20 +84,28 @@ function switchType(type) {
   applyFilters();
 }
 
-// ---- Cartes SVG (images) ----
-function buildImageSection() {
-  const cards = allFunctions.filter(f => f.categorie === 'Carte');
+// ---- Rendu section SVG (image grid, filtrée) ----
+function renderImageSection(items) {
   const container = document.getElementById('imageCards');
-  if (!container || cards.length === 0) return;
+  const countEl   = document.getElementById('countDisplay');
+  if (!container) return;
+  if (countEl) countEl.textContent = `${items.length} visuel${items.length !== 1 ? 's' : ''}`;
 
-  // Construit le contenu mais reste caché — affiché uniquement via switchView
-  container.innerHTML = cards.map(fn => `
+  if (items.length === 0) {
+    container.innerHTML = `<div class="empty" style="grid-column:1/-1"><span class="empty-icon">📭</span><p>Aucun visuel trouvé.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = items.map(fn => `
     <div class="img-card" data-id="${fn.id}">
       <div class="img-card-preview">
-        ${fn.svg_preview ? stripSvgDims(fn.svg_preview) : '<div class="svg-empty" style="padding:1rem">Aucun aperçu SVG.</div>'}
+        ${fn.svg_preview ? stripSvgDims(fn.svg_preview) : '<div class="svg-empty" style="padding:1rem;color:var(--text-muted);font-size:.8rem">Aucun aperçu.</div>'}
       </div>
       <div class="img-card-footer">
-        <span class="img-card-name">${escHtml(fn.nom)}</span>
+        <div>
+          <span class="img-card-name">${escHtml(fn.nom)}</span>
+          ${fn.sous_categorie ? `<span class="img-card-sub">${escHtml(fn.sous_categorie)}</span>` : ''}
+        </div>
         <span class="img-card-arrow">→</span>
       </div>
     </div>`).join('');
@@ -117,8 +125,7 @@ function buildSidebarCats() {
   container.innerHTML = '';
 
   const items = allFunctions.filter(typeFilter[activeType]);
-  const cats  = [...new Set(items.map(f => f.categorie).filter(Boolean))];
-  const typeColors = { dax: 'var(--accent)', svg: '#0891b2', html: '#f59e0b', deneb: '#7c3aed' };
+  const typeColors = { svg: '#0891b2', html: '#f59e0b', deneb: '#7c3aed' };
   const accentColor = typeColors[activeType];
 
   // Bouton "Toutes"
@@ -126,26 +133,92 @@ function buildSidebarCats() {
   allBtn.className = 'sb-cat-btn active';
   allBtn.dataset.cat = 'all';
   allBtn.innerHTML = `<span class="sb-cat-dot" style="background:${accentColor}"></span>Toutes<span class="sb-cat-count">${items.length}</span>`;
+  allBtn.addEventListener('click', () => {
+    activeCategory = 'all'; activeSousCategorie = 'all';
+    refreshSidebarActive(); syncFilters(); applyFilters();
+  });
   container.appendChild(allBtn);
 
-  // Sous-catégories
-  cats.forEach(cat => {
-    const count = items.filter(f => f.categorie === cat).length;
-    const btn = document.createElement('button');
-    btn.className = 'sb-cat-btn';
-    btn.dataset.cat = cat;
-    btn.innerHTML = `<span class="sb-cat-dot" style="background:${categoryColor(cat)}"></span>${escHtml(cat)}<span class="sb-cat-count">${count}</span>`;
-    container.appendChild(btn);
-  });
+  const cats = [...new Set(items.map(f => f.categorie).filter(Boolean))];
 
-  container.querySelectorAll('.sb-cat-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      container.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeCategory = btn.dataset.cat;
-      syncFilters();
-      applyFilters();
+  if (activeType === 'svg') {
+    // ── 2 niveaux : categorie → sous_categorie ──
+    cats.forEach(cat => {
+      const catItems = items.filter(f => f.categorie === cat);
+      const subcats  = [...new Set(catItems.map(f => f.sous_categorie).filter(Boolean))];
+      const color    = categoryColor(cat);
+
+      const group = document.createElement('div');
+      group.className = 'sb-cat-group';
+
+      const parentBtn = document.createElement('button');
+      parentBtn.className = 'sb-cat-btn sb-cat-parent';
+      parentBtn.dataset.cat  = cat;
+      parentBtn.dataset.sub  = 'all';
+      parentBtn.innerHTML = `<span class="sb-cat-dot" style="background:${color}"></span>${escHtml(cat)}<span class="sb-cat-count">${catItems.length}</span>`;
+      parentBtn.addEventListener('click', () => {
+        activeCategory = cat; activeSousCategorie = 'all';
+        group.classList.toggle('open');
+        refreshSidebarActive(); applyFilters();
+      });
+      group.appendChild(parentBtn);
+
+      if (subcats.length) {
+        const children = document.createElement('div');
+        children.className = 'sb-cat-children';
+        subcats.forEach(sub => {
+          const subCount = catItems.filter(f => f.sous_categorie === sub).length;
+          const subBtn = document.createElement('button');
+          subBtn.className = 'sb-subcat-btn';
+          subBtn.dataset.cat = cat;
+          subBtn.dataset.sub = sub;
+          subBtn.innerHTML = `<span class="sb-subcat-dot"></span>${escHtml(sub)}<span class="sb-cat-count">${subCount}</span>`;
+          subBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            activeCategory = cat; activeSousCategorie = sub;
+            group.classList.add('open');
+            refreshSidebarActive(); applyFilters();
+          });
+          children.appendChild(subBtn);
+        });
+        group.appendChild(children);
+      }
+      container.appendChild(group);
     });
+
+  } else {
+    // ── 1 niveau pour HTML / Deneb ──
+    cats.forEach(cat => {
+      const count = items.filter(f => f.categorie === cat).length;
+      const btn = document.createElement('button');
+      btn.className = 'sb-cat-btn';
+      btn.dataset.cat = cat;
+      btn.innerHTML = `<span class="sb-cat-dot" style="background:${categoryColor(cat)}"></span>${escHtml(cat)}<span class="sb-cat-count">${count}</span>`;
+      btn.addEventListener('click', () => {
+        activeCategory = cat; activeSousCategorie = 'all';
+        refreshSidebarActive(); syncFilters(); applyFilters();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  refreshSidebarActive();
+}
+
+function refreshSidebarActive() {
+  const container = document.getElementById('sbCats');
+  if (!container) return;
+  container.querySelectorAll('.sb-cat-btn, .sb-subcat-btn').forEach(b => {
+    const matchCat = b.dataset.cat === activeCategory || (b.dataset.cat === 'all' && activeCategory === 'all');
+    const matchSub = !b.dataset.sub || b.dataset.sub === activeSousCategorie ||
+                     (b.dataset.sub === 'all' && activeSousCategorie === 'all' && b.dataset.cat === activeCategory);
+    b.classList.toggle('active',
+      b.dataset.cat === 'all'
+        ? activeCategory === 'all'
+        : b.classList.contains('sb-subcat-btn')
+          ? b.dataset.cat === activeCategory && b.dataset.sub === activeSousCategorie
+          : b.dataset.cat === activeCategory && activeSousCategorie === 'all'
+    );
   });
 }
 
@@ -249,16 +322,20 @@ function applyFilters() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   let filtered;
 
-  if (activeType === 'svg') return; // handled by buildImageSection
   filtered = allFunctions.filter(typeFilter[activeType]);
-  if (activeCategory !== 'all') filtered = filtered.filter(f => f.categorie === activeCategory);
+  if (activeCategory !== 'all')      filtered = filtered.filter(f => f.categorie === activeCategory);
+  if (activeSousCategorie !== 'all') filtered = filtered.filter(f => f.sous_categorie === activeSousCategorie);
 
   if (q) filtered = filtered.filter(f =>
     f.nom.toLowerCase().includes(q) ||
     (f.description || '').toLowerCase().includes(q) ||
     (f.code || '').toLowerCase().includes(q)
   );
-  renderGrid(filtered);
+  if (activeType === 'svg') {
+    renderImageSection(filtered);
+  } else {
+    renderGrid(filtered);
+  }
 }
 const searchInputEl = document.getElementById('searchInput');
 searchInputEl.addEventListener('input', () => {

@@ -8,11 +8,11 @@
 //    ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS statut TEXT DEFAULT 'approved';
 //    UPDATE fonctions SET statut = 'approved' WHERE statut IS NULL;
 //
-//    ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'dax';
-//    UPDATE fonctions SET type = 'svg'   WHERE categorie = 'Carte';
+//    ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'svg';
+//    ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS sous_categorie TEXT;
+//    UPDATE fonctions SET type = 'svg'   WHERE categorie = 'Carte' OR type IS NULL OR type = 'dax';
 //    UPDATE fonctions SET type = 'html'  WHERE categorie = 'HTML';
 //    UPDATE fonctions SET type = 'deneb' WHERE categorie = 'Deneb';
-//    UPDATE fonctions SET type = 'dax'   WHERE type IS NULL;
 // ============================================================
 
 const SUPABASE_URL  = 'https://fcgdefombxdwpeqmqsaa.supabase.co';   // ex: https://xxxx.supabase.co

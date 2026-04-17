@@ -198,6 +198,54 @@ body {
 }
 .sb-cat-btn:hover { background: var(--surface2); color: var(--text-sub); }
 .sb-cat-btn.active { color: var(--sb-link); font-weight: 600; }
+
+/* ── Hiérarchie sidebar SVG ── */
+.sb-cat-group { margin-bottom: .05rem; }
+.sb-cat-parent::after {
+  content: '›';
+  margin-left: auto;
+  font-size: .8rem;
+  color: var(--text-muted);
+  transition: transform .15s;
+}
+.sb-cat-group.open > .sb-cat-parent::after { transform: rotate(90deg); }
+.sb-cat-children {
+  display: none;
+  padding-left: 1rem;
+}
+.sb-cat-group.open > .sb-cat-children { display: block; }
+.sb-subcat-btn {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  width: 100%;
+  padding: .28rem .5rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: .78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-align: left;
+  transition: all .14s;
+  margin-bottom: .03rem;
+}
+.sb-subcat-btn:hover { background: var(--surface2); color: var(--text-sub); }
+.sb-subcat-btn.active { color: var(--sb-link); font-weight: 600; }
+.sb-subcat-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  background: var(--text-muted); opacity: .6;
+}
+.sb-subcat-btn.active .sb-subcat-dot { background: var(--sb-link); opacity: 1; }
+.img-card-sub {
+  display: block;
+  font-size: .68rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-top: .1rem;
+}
 .sb-cat-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--cat-color, var(--accent));
