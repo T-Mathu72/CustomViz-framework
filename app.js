@@ -84,6 +84,9 @@ function switchType(type) {
   applyFilters();
 }
 
+// ---- Observateur pour le lazy-loading SVG ----
+let _svgObserver = null;
+
 // ---- Rendu section SVG (image grid, filtrée) ----
 function renderImageSection(items) {
   const container = document.getElementById('imageCards');
@@ -91,16 +94,19 @@ function renderImageSection(items) {
   if (!container) return;
   if (countEl) countEl.textContent = `${items.length} visuel${items.length !== 1 ? 's' : ''}`;
 
+  // Déconnecter l'observateur précédent
+  if (_svgObserver) { _svgObserver.disconnect(); _svgObserver = null; }
+
   if (items.length === 0) {
     container.innerHTML = `<div class="empty" style="grid-column:1/-1"><span class="empty-icon">📭</span><p>Aucun visuel trouvé.</p></div>`;
     return;
   }
 
+  // Rendre les cartes sans SVG (placeholders) pour un affichage immédiat
+  const fnMap = new Map(items.map(fn => [String(fn.id), fn]));
   container.innerHTML = items.map(fn => `
     <div class="img-card" data-id="${fn.id}">
-      <div class="img-card-preview">
-        ${fn.svg_preview ? stripSvgDims(fn.svg_preview) : '<div class="svg-empty" style="padding:1rem;color:var(--text-muted);font-size:.8rem">Aucun aperçu.</div>'}
-      </div>
+      <div class="img-card-preview img-lazy-placeholder"></div>
       <div class="img-card-footer">
         <div>
           <span class="img-card-name">${escHtml(fn.nom)}</span>
@@ -110,9 +116,26 @@ function renderImageSection(items) {
       </div>
     </div>`).join('');
 
+  // Injecter les SVGs uniquement quand la carte entre dans le viewport
+  _svgObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const card    = entry.target;
+      const preview = card.querySelector('.img-lazy-placeholder');
+      if (!preview) return;
+      const fn = fnMap.get(card.dataset.id);
+      preview.innerHTML = fn?.svg_preview
+        ? stripSvgDims(fn.svg_preview)
+        : '<div class="svg-empty" style="padding:1rem;color:var(--text-muted);font-size:.8rem">Aucun aperçu.</div>';
+      preview.classList.remove('img-lazy-placeholder');
+      _svgObserver.unobserve(card);
+    });
+  }, { rootMargin: '150px' });
+
   container.querySelectorAll('.img-card').forEach(card => {
+    _svgObserver.observe(card);
     card.addEventListener('click', () => {
-      const fn = allFunctions.find(f => f.id === card.dataset.id);
+      const fn = fnMap.get(card.dataset.id);
       if (fn) openModal(fn);
     });
   });
@@ -320,9 +343,7 @@ function renderGrid(functions) {
 // ---- Filtrage ----
 function applyFilters() {
   const q = document.getElementById('searchInput').value.toLowerCase();
-  let filtered;
-
-  filtered = allFunctions.filter(typeFilter[activeType]);
+  let filtered = allFunctions.filter(typeFilter[activeType]);
   if (activeCategory !== 'all')      filtered = filtered.filter(f => f.categorie === activeCategory);
   if (activeSousCategorie !== 'all') filtered = filtered.filter(f => f.sous_categorie === activeSousCategorie);
 
@@ -331,9 +352,17 @@ function applyFilters() {
     (f.description || '').toLowerCase().includes(q) ||
     (f.code || '').toLowerCase().includes(q)
   );
+
+  const tableSection = document.getElementById('tableSection');
+  const imageSection = document.getElementById('imageSection');
+
   if (activeType === 'svg') {
+    if (tableSection) tableSection.style.display = 'none';
+    if (imageSection) imageSection.style.display = '';
     renderImageSection(filtered);
   } else {
+    if (imageSection) imageSection.style.display = 'none';
+    if (tableSection) tableSection.style.display = '';
     renderGrid(filtered);
   }
 }
