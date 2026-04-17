@@ -68,32 +68,36 @@
 
     <main>
 
-      <!-- Page head + stats -->
-      <div class="page-head">
-        <div>
-          <div class="page-head-title">Bibliothèque DAX</div>
-          <div class="page-head-sub">Toutes vos mesures Power BI au même endroit</div>
-        </div>
-        <div class="page-stats">
-          <div class="stat-card">
-            <div class="stat-icon indigo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-            </div>
-            <div>
-              <div class="stat-val" id="statTotal">—</div>
-              <div class="stat-lbl">Mesures</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon purple">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12h3m12 0h3M12 3v3m0 12v3"/></svg>
-            </div>
-            <div>
-              <div class="stat-val" id="statCats">—</div>
-              <div class="stat-lbl">Catégories</div>
-            </div>
-          </div>
-        </div>
+      <!-- Type tabs -->
+      <div class="type-tabbar" id="typeTabs">
+        <button class="type-tab active" data-type="dax">
+          <span class="type-tab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          </span>
+          <span class="type-tab-label">DAX</span>
+          <span class="type-tab-count" id="countDax">—</span>
+        </button>
+        <button class="type-tab" data-type="svg">
+          <span class="type-tab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+          </span>
+          <span class="type-tab-label">SVG</span>
+          <span class="type-tab-count" id="countSvg">—</span>
+        </button>
+        <button class="type-tab" data-type="html">
+          <span class="type-tab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </span>
+          <span class="type-tab-label">HTML</span>
+          <span class="type-tab-count" id="countHtml">—</span>
+        </button>
+        <button class="type-tab" data-type="deneb">
+          <span class="type-tab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </span>
+          <span class="type-tab-label">Deneb</span>
+          <span class="type-tab-count" id="countDeneb">—</span>
+        </button>
       </div>
 
       <!-- Cartes SVG (images complètes) -->

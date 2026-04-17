@@ -2,7 +2,7 @@
 
 let allFunctions = [];
 let activeCategory = 'all';
-let activeView = 'table'; // 'table' | 'carte' | 'html'
+let activeType = 'dax'; // 'dax' | 'svg' | 'html' | 'deneb'
 
 // ---- Palette de couleurs par catégorie ----
 const PALETTE = ['#5b6ef5','#7c3aed','#0891b2','#059669','#d97706','#db2777','#dc2626','#0284c7','#7c3aed','#4f46e5'];
@@ -26,32 +26,65 @@ async function loadFunctions() {
 
   allFunctions = data || [];
 
-  // Stats
-  document.getElementById('statTotal').textContent = allFunctions.length;
   const cats = [...new Set(allFunctions.map(f => f.categorie).filter(Boolean))];
-  document.getElementById('statCats').textContent = cats.length;
 
+  // Type counts
+  const typeMap = { dax: isDax, svg: isSvg, html: isHtml, deneb: isDeneb };
+  Object.entries(typeMap).forEach(([type, fn]) => {
+    const el = document.getElementById('count' + type.charAt(0).toUpperCase() + type.slice(1));
+    if (el) el.textContent = allFunctions.filter(fn).length;
+  });
+
+  buildTypeTabs();
   buildSidebarCats(cats);
   buildFilters(cats);
   buildImageSection();
-  renderGrid(allFunctions.filter(f => f.categorie !== 'Carte' && f.categorie !== 'HTML'));
+  applyFilters();
 }
 
-// ---- Vue Table / Carte / HTML ----
-function switchView(type) {
-  activeView = type;
+// ---- Helpers type ----
+const isDax   = f => f.categorie !== 'Carte' && f.categorie !== 'HTML' && f.categorie !== 'Deneb';
+const isSvg   = f => f.categorie === 'Carte';
+const isHtml  = f => f.categorie === 'HTML';
+const isDeneb = f => f.categorie === 'Deneb';
+
+// ---- Type tabs ----
+function buildTypeTabs() {
+  document.querySelectorAll('.type-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchType(btn.dataset.type));
+  });
+}
+
+function switchType(type) {
+  activeType = type;
+  activeCategory = 'all';
+
+  document.querySelectorAll('.type-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.type === type));
+
   const tableSection = document.getElementById('tableSection');
   const imageSection = document.getElementById('imageSection');
-  if (type === 'carte') {
-    if (tableSection) tableSection.style.display = 'none';
-    if (imageSection) imageSection.style.display = '';
+
+  if (type === 'svg') {
+    tableSection.style.display = 'none';
+    imageSection.style.display = '';
   } else {
-    if (tableSection) tableSection.style.display = '';
-    if (imageSection) imageSection.style.display = 'none';
-    // Titre de section
-    const titleEl = tableSection && tableSection.querySelector('.section-title');
-    if (titleEl) titleEl.textContent = type === 'html' ? 'Visuels HTML' : 'Toutes les mesures';
+    tableSection.style.display = '';
+    imageSection.style.display = 'none';
+    const titleEl = tableSection.querySelector('.section-title');
+    if (titleEl) titleEl.textContent =
+      type === 'html' ? 'Visuels HTML' :
+      type === 'deneb' ? 'Visuels Deneb / Vega-Lite' :
+      'Mesures DAX';
   }
+
+  // Rebuild sub-category filters for the active type
+  const tableCats = type === 'dax'
+    ? [...new Set(allFunctions.filter(isDax).map(f => f.categorie).filter(Boolean))]
+    : [];
+  buildFilters(tableCats, type !== 'dax');
+
+  applyFilters();
 }
 
 // ---- Cartes SVG (images) ----
@@ -86,82 +119,51 @@ function buildSidebarCats(cats) {
   if (!container) return;
   container.innerHTML = '';
 
-  const tableCats = cats.filter(c => c !== 'Carte' && c !== 'HTML');
-  const hasCartes  = cats.includes('Carte');
-  const hasHtml    = cats.includes('HTML');
-  const tableCount = allFunctions.filter(f => f.categorie !== 'Carte' && f.categorie !== 'HTML').length;
+  const sections = [
+    { label: 'DAX',   type: 'dax',   filter: isDax,   color: 'var(--accent)' },
+    { label: 'SVG',   type: 'svg',   filter: isSvg,   color: '#0891b2' },
+    { label: 'HTML',  type: 'html',  filter: isHtml,  color: '#f59e0b' },
+    { label: 'Deneb', type: 'deneb', filter: isDeneb, color: '#7c3aed' },
+  ];
 
-  // ── Super-catégorie TABLE ──
-  container.insertAdjacentHTML('beforeend',
-    '<div class="sb-type-label">Table</div>');
+  sections.forEach(({ label, type, filter, color }) => {
+    const items = allFunctions.filter(filter);
+    if (items.length === 0 && type !== 'dax') return; // hide empty non-dax sections
 
-  const allBtn = document.createElement('button');
-  allBtn.className = 'sb-cat-btn active';
-  allBtn.dataset.cat = 'all';
-  allBtn.innerHTML = `<span class="sb-cat-dot" style="background:var(--accent)"></span>Toutes<span class="sb-cat-count">${tableCount}</span>`;
-  container.appendChild(allBtn);
+    const totalCount = items.length;
+    container.insertAdjacentHTML('beforeend',
+      `<div class="sb-type-label" style="margin-top:.9rem">${label}</div>`);
 
-  tableCats.forEach(cat => {
-    const count = allFunctions.filter(f => f.categorie === cat).length;
-    const color = categoryColor(cat);
-    const btn = document.createElement('button');
-    btn.className = 'sb-cat-btn';
-    btn.dataset.cat = cat;
-    btn.innerHTML = `<span class="sb-cat-dot" style="background:${color}"></span>${escHtml(cat)}<span class="sb-cat-count">${count}</span>`;
-    container.appendChild(btn);
+    const allBtn = document.createElement('button');
+    allBtn.className = 'sb-cat-btn' + (type === 'dax' ? ' active' : '');
+    allBtn.dataset.stype = type;
+    allBtn.dataset.cat   = 'all';
+    allBtn.innerHTML = `<span class="sb-cat-dot" style="background:${color}"></span>Toutes<span class="sb-cat-count">${totalCount}</span>`;
+    container.appendChild(allBtn);
+
+    if (type === 'dax') {
+      const daxCats = cats.filter(c => c !== 'Carte' && c !== 'HTML' && c !== 'Deneb');
+      daxCats.forEach(cat => {
+        const count = allFunctions.filter(f => f.categorie === cat).length;
+        const btn = document.createElement('button');
+        btn.className = 'sb-cat-btn';
+        btn.dataset.stype = 'dax';
+        btn.dataset.cat   = cat;
+        btn.innerHTML = `<span class="sb-cat-dot" style="background:${categoryColor(cat)}"></span>${escHtml(cat)}<span class="sb-cat-count">${count}</span>`;
+        container.appendChild(btn);
+      });
+    }
   });
 
-  // ── Super-catégorie CARTE ──
-  if (hasCartes) {
-    const carteCount = allFunctions.filter(f => f.categorie === 'Carte').length;
-    container.insertAdjacentHTML('beforeend',
-      '<div class="sb-type-label" style="margin-top:.9rem">Carte</div>');
-
-    // Bouton "Toutes" pour les cartes
-    const carteToutesBtn = document.createElement('button');
-    carteToutesBtn.className = 'sb-cat-btn';
-    carteToutesBtn.dataset.cat = 'all-carte';
-    carteToutesBtn.dataset.type = 'carte';
-    carteToutesBtn.innerHTML = `<span class="sb-cat-dot" style="background:var(--accent)"></span>Toutes<span class="sb-cat-count">${carteCount}</span>`;
-    container.appendChild(carteToutesBtn);
-
-    // Sous-catégorie "Carte"
-    const carteBtn = document.createElement('button');
-    carteBtn.className = 'sb-cat-btn';
-    carteBtn.dataset.cat = 'Carte';
-    carteBtn.dataset.type = 'carte';
-    carteBtn.innerHTML = `<span class="sb-cat-dot" style="background:${categoryColor('Carte')}"></span>Cartes SVG<span class="sb-cat-count">${carteCount}</span>`;
-    container.appendChild(carteBtn);
-  }
-
-  // ── Super-catégorie HTML ──
-  if (hasHtml) {
-    const htmlCount = allFunctions.filter(f => f.categorie === 'HTML').length;
-    container.insertAdjacentHTML('beforeend',
-      '<div class="sb-type-label" style="margin-top:.9rem">HTML</div>');
-
-    const htmlToutesBtn = document.createElement('button');
-    htmlToutesBtn.className = 'sb-cat-btn';
-    htmlToutesBtn.dataset.cat = 'all-html';
-    htmlToutesBtn.dataset.type = 'html';
-    htmlToutesBtn.innerHTML = `<span class="sb-cat-dot" style="background:#f59e0b"></span>Toutes<span class="sb-cat-count">${htmlCount}</span>`;
-    container.appendChild(htmlToutesBtn);
-  }
-
-  // Handlers
   container.querySelectorAll('.sb-cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      const type = btn.dataset.stype;
+      const cat  = btn.dataset.cat;
       container.querySelectorAll('.sb-cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      if (btn.dataset.type === 'carte') {
-        switchView('carte');
-      } else if (btn.dataset.type === 'html') {
-        switchView('html');
-        activeCategory = 'all';
-        applyFilters();
-      } else {
-        switchView('table');
-        activeCategory = btn.dataset.cat;
+      switchType(type);
+      if (type === 'dax') {
+        activeCategory = cat;
         syncFilters();
         applyFilters();
       }
@@ -169,12 +171,12 @@ function buildSidebarCats(cats) {
   });
 }
 
-// ---- Filtres top ----
-function buildFilters(cats) {
+// ---- Filtres sous-catégories (DAX uniquement) ----
+function buildFilters(cats, hide = false) {
   const container = document.getElementById('filters');
-  const tableCats = cats.filter(c => c !== 'Carte' && c !== 'HTML');
+  if (hide || cats.length === 0) { container.innerHTML = ''; return; }
   container.innerHTML = `<button class="filter-btn active" data-cat="all">Toutes</button>`;
-  tableCats.forEach(cat => {
+  cats.forEach(cat => {
     const btn = document.createElement('button');
     btn.className = 'filter-btn';
     btn.dataset.cat = cat;
@@ -185,7 +187,6 @@ function buildFilters(cats) {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.cat;
       syncFilters();
-      syncSidebar();
       applyFilters();
     });
   });
@@ -193,10 +194,6 @@ function buildFilters(cats) {
 
 function syncFilters() {
   document.querySelectorAll('#filters .filter-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.cat === activeCategory));
-}
-function syncSidebar() {
-  document.querySelectorAll('#sbCats .sb-cat-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.cat === activeCategory));
 }
 
@@ -265,12 +262,15 @@ function renderGrid(functions) {
 function applyFilters() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   let filtered;
-  if (activeView === 'html') {
-    filtered = allFunctions.filter(f => f.categorie === 'HTML');
-  } else {
-    filtered = allFunctions.filter(f => f.categorie !== 'Carte' && f.categorie !== 'HTML');
+
+  if (activeType === 'svg') return; // handled by buildImageSection
+  if (activeType === 'html')  filtered = allFunctions.filter(isHtml);
+  else if (activeType === 'deneb') filtered = allFunctions.filter(isDeneb);
+  else {
+    filtered = allFunctions.filter(isDax);
     if (activeCategory !== 'all') filtered = filtered.filter(f => f.categorie === activeCategory);
   }
+
   if (q) filtered = filtered.filter(f =>
     f.nom.toLowerCase().includes(q) ||
     (f.description || '').toLowerCase().includes(q) ||

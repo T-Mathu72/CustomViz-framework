@@ -75,43 +75,6 @@
       </div>
 
       <div class="card">
-        <h2 class="card-title">✦ Nouvelle mesure</h2>
-        <div class="form-grid">
-          <div class="field">
-            <label>Nom de la mesure *</label>
-            <input type="text" id="inputNom" placeholder="ex: KPI Ventes Total"/>
-          </div>
-          <div class="field">
-            <label>Catégorie *</label>
-            <input type="text" id="inputCategorie" placeholder="ex: KPI, Finance, Date…"/>
-          </div>
-          <div class="field full">
-            <label>Description *</label>
-            <textarea id="inputDesc" rows="2" placeholder="Ce que fait cette mesure…"></textarea>
-          </div>
-          <div class="field full">
-            <label>Code DAX *</label>
-            <textarea id="inputCode" rows="8" placeholder="Ventes Total =&#10;CALCULATE(&#10;    SUM(Ventes[Montant]),&#10;    ALLSELECTED()&#10;)"></textarea>
-          </div>
-          <div class="field full">
-            <label>Aperçu SVG <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optionnel)</span></label>
-            <textarea id="inputSvg" rows="4" placeholder="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>&#10;  ...&#10;</svg>"></textarea>
-            <span class="field-hint">Collez le SVG du rendu visuel de la mesure</span>
-          </div>
-          <div class="field full">
-            <label>Aperçu en direct</label>
-            <div class="svg-live-preview" id="svgLivePreview">
-              <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:.73rem">L'aperçu SVG apparaîtra ici</span>
-            </div>
-          </div>
-        </div>
-        <div class="form-footer">
-          <span class="form-msg" id="formMsg"></span>
-          <button class="btn-primary" id="btnAjouter">Ajouter la mesure</button>
-        </div>
-      </div>
-
-      <div class="card">
         <h2 class="card-title">✦ Mesures existantes</h2>
         <div style="position:relative;margin-bottom:1.25rem">
           <svg style="position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:14px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -171,9 +134,12 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:.65rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
-        <button class="btn-reject-modal btn-ghost" id="propRejectBtn">✕ Rejeter</button>
-        <button class="btn-approve" id="propApproveBtn" style="padding:.5rem 1.2rem;font-size:.85rem">✓ Approuver</button>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)" id="propModalActions">
+        <!-- pending actions -->
+        <button class="btn-ghost" id="propRejectBtn" style="display:none">✕ Rejeter</button>
+        <button class="btn-approve" id="propApproveBtn" style="display:none;padding:.5rem 1.2rem;font-size:.85rem">✓ Approuver</button>
+        <!-- approved action -->
+        <button class="btn-danger" id="propDeleteBtn" style="display:none">Supprimer</button>
       </div>
     </div>
   </div>
