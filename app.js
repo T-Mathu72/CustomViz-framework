@@ -510,6 +510,114 @@ const SVG_GENERATORS = {
       return `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="${bg}"/><path d="${icon}" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
     }
   },
+
+  'Anneau Compact Table': {
+    params: [
+      { id: 'val',   label: 'Profit / Atteinte', type: 'range', min: -0.1, max: 1, step: 0.01, default: 0.42, fmt: v => Math.round(v*100)+'%' },
+      { id: 'color', label: 'Couleur arc', type: 'color', default: '#AB0000' },
+    ],
+    render: p => {
+      const R = 10, C = 2 * Math.PI * R;
+      const pct = Math.min(1, Math.max(0, p.val));
+      const dash = C * pct, gap = C - dash;
+      const txt = Math.round(p.val * 100) + '%';
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="28"><circle cx="18" cy="14" r="${R}" fill="none" stroke="#C5C5C5" stroke-width="4"/><circle cx="18" cy="14" r="${R}" fill="none" stroke="${p.color}" stroke-width="4" stroke-linecap="round" transform="rotate(-90 18 14)" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}"/><text x="34" y="18" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="${p.color}">${txt}</text></svg>`;
+    }
+  },
+
+  'Anneau Performance': {
+    params: [
+      { id: 'profit', label: 'Marge / Profit', type: 'range', min: -0.1, max: 0.2, step: 0.005, default: 0.07, fmt: v => (v>=0?'+':'')+Math.round(v*100)+'%' },
+    ],
+    render: p => {
+      const color =
+        p.profit >= 0.10 ? '#748678' :
+        p.profit >= 0.05 ? '#3b82f6' :
+        p.profit >  0.00 ? '#6b7280' :
+        p.profit >= -0.05 ? '#f59e0b' : '#ef4444';
+      const R = 10, C = 2 * Math.PI * R;
+      const pct = Math.min(1, Math.max(0, p.profit));
+      const dash = C * pct, gap = C - dash;
+      const txt = (p.profit >= 0 ? '+' : '') + Math.round(p.profit * 100) + '%';
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="28"><circle cx="18" cy="14" r="${R}" fill="none" stroke="#C5C5C5" stroke-width="4"/><circle cx="18" cy="14" r="${R}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" transform="rotate(-90 18 14)" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}"/><text x="34" y="18" font-family="Segoe UI,Arial" font-size="12" font-weight="700" fill="${color}">${txt}</text></svg>`;
+    }
+  },
+
+  'Spark Area Remplie': {
+    params: [
+      { id: 'v1', label: 'M-5', type: 'number', min: 0, default: 60 },
+      { id: 'v2', label: 'M-4', type: 'number', min: 0, default: 75 },
+      { id: 'v3', label: 'M-3', type: 'number', min: 0, default: 55 },
+      { id: 'v4', label: 'M-2', type: 'number', min: 0, default: 80 },
+      { id: 'v5', label: 'M-1', type: 'number', min: 0, default: 70 },
+      { id: 'v6', label: 'M actuel', type: 'number', min: 0, default: 90 },
+      { id: 'color', label: 'Couleur', type: 'color', default: '#AB0000' },
+    ],
+    render: p => {
+      const vals = [p.v1,p.v2,p.v3,p.v4,p.v5,p.v6];
+      const mx = Math.max(...vals), mn = Math.min(...vals), rng = mx - mn || 1;
+      const W = 80, H = 34, pad = 4;
+      const xs = vals.map((_,i) => Math.round(pad + i * (W - pad*2) / (vals.length - 1)));
+      const ys = vals.map(v => Math.round(H - pad - ((v - mn) / rng) * (H - pad*2)));
+      const linePoints = xs.map((x,i) => `${x},${ys[i]}`).join(' ');
+      const areaPoints = `${xs[0]},${H} ` + linePoints + ` ${xs[xs.length-1]},${H}`;
+      // Parse hex color for fill opacity
+      const hex = p.color.replace('#','');
+      const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16);
+      return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="${areaPoints}" fill="rgba(${r},${g},${b},0.15)"/><polyline points="${linePoints}" fill="none" stroke="${p.color}" stroke-width="2" stroke-linejoin="round"/><circle cx="${xs[xs.length-1]}" cy="${ys[ys.length-1]}" r="3" fill="${p.color}"/></svg>`;
+    }
+  },
+
+  'Rangée de Puces': {
+    params: [
+      { id: 'val',   label: 'Progression (0–10)', type: 'range', min: 0, max: 10, step: 1, default: 7, fmt: v => v+'/10' },
+      { id: 'color', label: 'Couleur active',      type: 'color', default: '#AB0000' },
+    ],
+    render: p => {
+      const n = 10, w = 8, h = 12, gap = 4, total = n * w + (n-1) * gap;
+      const squares = Array.from({length: n}, (_,i) =>
+        `<rect x="${i*(w+gap)}" y="0" width="${w}" height="${h}" rx="2" fill="${i < p.val ? p.color : '#E5E7EB'}"/>`
+      ).join('');
+      return `<svg width="${total}" height="${h}" viewBox="0 0 ${total} ${h}" xmlns="http://www.w3.org/2000/svg">${squares}</svg>`;
+    }
+  },
+
+  'Comparatif 2 Barres': {
+    params: [
+      { id: 'lbl1', label: 'Label A',    type: 'text',   default: 'Objectif' },
+      { id: 'v1',   label: 'Valeur A',   type: 'number', min: 0, default: 115 },
+      { id: 'lbl2', label: 'Label B',    type: 'text',   default: 'Réalisé' },
+      { id: 'v2',   label: 'Valeur B',   type: 'number', min: 0, default: 88 },
+      { id: 'c1',   label: 'Couleur A',  type: 'color',  default: '#AB0000' },
+      { id: 'c2',   label: 'Couleur B',  type: 'color',  default: '#C5C5C5' },
+    ],
+    render: p => {
+      const mx = Math.max(p.v1, p.v2, 1);
+      const bw = 160;
+      const l1 = Math.round((p.v1 / mx) * bw);
+      const l2 = Math.round((p.v2 / mx) * bw);
+      const lbl1 = String(p.lbl1 || 'A').slice(0, 10);
+      const lbl2 = String(p.lbl2 || 'B').slice(0, 10);
+      return `<svg width="220" height="38" viewBox="0 0 220 38" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="0" y="10" font-family="Arial" font-size="8" fill="#6B7280">${lbl1}</text><rect x="0" y="13" width="${bw}" height="8" rx="4" fill="#F3F4F6"/><rect x="0" y="13" width="${l1}" height="8" rx="4" fill="${p.c1}"/><text x="${l1+4}" y="21" font-family="Arial" font-size="8" font-weight="700" fill="${p.c1}">${p.v1}</text><text x="0" y="30" font-family="Arial" font-size="8" fill="#6B7280">${lbl2}</text><rect x="0" y="32" width="${bw}" height="8" rx="4" fill="#F3F4F6"/><rect x="0" y="32" width="${l2}" height="8" rx="4" fill="${p.c2}"/><text x="${l2+4}" y="40" font-family="Arial" font-size="8" font-weight="700" fill="${p.c2}">${p.v2}</text></svg>`;
+    }
+  },
+
+  'Barre Segmentée': {
+    params: [
+      { id: 'val',   label: 'Progression', type: 'range', min: 0, max: 1, step: 0.01, default: 0.6, fmt: v => Math.round(v*100)+'%' },
+      { id: 'segs',  label: 'Nb segments', type: 'range', min: 2, max: 20, step: 1,    default: 10,  fmt: v => Math.round(v)+'' },
+      { id: 'color', label: 'Couleur',     type: 'color', default: '#AB0000' },
+    ],
+    render: p => {
+      const n = Math.round(p.segs), filled = Math.round(p.val * n);
+      const W = 200, H = 16, segW = Math.floor((W - (n-1)*2) / n);
+      const rects = Array.from({length: n}, (_,i) => {
+        const x = i * (segW + 2);
+        return `<rect x="${x}" y="0" width="${segW}" height="${H}" rx="3" fill="${i < filled ? p.color : '#E5E7EB'}"/>`;
+      }).join('');
+      return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
+    }
+  },
 };
 
 let _currentGenFn = null;
@@ -680,6 +788,11 @@ function buildGenerator(fn) {
             <input type="color" data-id="${p.id}" value="${p.default}">
             <span class="gen-val-badge" id="badge-${p.id}">${p.default}</span>
           </div>
+        </div>`;
+      } else if (p.type === 'text') {
+        return `<div class="gen-field">
+          <label>${p.label}</label>
+          <input type="text" data-id="${p.id}" value="${p.default}" style="width:100%">
         </div>`;
       } else {
         return `<div class="gen-field">
