@@ -6,11 +6,16 @@
 -- 1. Colonnes
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS sous_categorie TEXT;
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'svg';
-ALTER TABLE fonctions RENAME COLUMN svg_preview TO preview;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fonctions' AND column_name='svg_preview') THEN
+    ALTER TABLE fonctions RENAME COLUMN svg_preview TO preview;
+  END IF;
+END $$;
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS original_id UUID REFERENCES fonctions(id) ON DELETE SET NULL;
+ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS sample_data TEXT;
 
 -- Contrainte unique sur nom pour éviter les doublons lors des re-exécutions
-ALTER TABLE fonctions ADD CONSTRAINT fonctions_nom_unique UNIQUE (nom);
+ALTER TABLE fonctions ADD CONSTRAINT IF NOT EXISTS fonctions_nom_unique UNIQUE (nom);
 
 -- 2. Types
 UPDATE fonctions SET type = 'svg'   WHERE type IS NULL OR type = 'dax' OR type = '';

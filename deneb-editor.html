@@ -384,13 +384,33 @@
 
     // ── Initialisation ────────────────────────────────────────────────────
     function init() {
-      // Charge depuis l'URL (?spec=id) ou depuis localStorage ou défaut
-      const params = new URLSearchParams(location.search);
-      const savedSpec  = localStorage.getItem('cv-deneb-spec');
-      const savedData  = localStorage.getItem('cv-deneb-data');
+      const fromLib = new URLSearchParams(location.search).get('from') === 'lib';
 
-      specEditor.value = savedSpec  || JSON.stringify(DEFAULT_SPEC, null, 2);
-      dataEditor.value = savedData  || JSON.stringify(DEFAULT_DATA, null, 2);
+      if (fromLib) {
+        // Chargé depuis la bibliothèque via le bouton "Ouvrir dans l'éditeur"
+        const libSpec = sessionStorage.getItem('cv-deneb-from-lib-spec');
+        const libData = sessionStorage.getItem('cv-deneb-from-lib-data');
+        sessionStorage.removeItem('cv-deneb-from-lib-spec');
+        sessionStorage.removeItem('cv-deneb-from-lib-data');
+
+        try {
+          specEditor.value = libSpec
+            ? JSON.stringify(JSON.parse(libSpec), null, 2)
+            : JSON.stringify(DEFAULT_SPEC, null, 2);
+        } catch (_) { specEditor.value = libSpec || JSON.stringify(DEFAULT_SPEC, null, 2); }
+
+        try {
+          dataEditor.value = libData
+            ? JSON.stringify(JSON.parse(libData), null, 2)
+            : JSON.stringify(DEFAULT_DATA, null, 2);
+        } catch (_) { dataEditor.value = libData || JSON.stringify(DEFAULT_DATA, null, 2); }
+      } else {
+        // Session normale : reprend depuis localStorage ou défaut
+        const savedSpec = localStorage.getItem('cv-deneb-spec');
+        const savedData = localStorage.getItem('cv-deneb-data');
+        specEditor.value = savedSpec || JSON.stringify(DEFAULT_SPEC, null, 2);
+        dataEditor.value = savedData || JSON.stringify(DEFAULT_DATA, null, 2);
+      }
 
       updateLineCount();
       render();

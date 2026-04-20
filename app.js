@@ -932,6 +932,21 @@ function openModal(fn) {
   btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copier`;
 
   document.getElementById('proposeEditBtn').href = `submit.html?edit=${fn.id}`;
+
+  // Bouton "Ouvrir dans l'éditeur Deneb" — visible uniquement pour les visuels deneb
+  const denebBtn = document.getElementById('openInDenebBtn');
+  if (fn.type === 'deneb') {
+    denebBtn.style.display = '';
+    denebBtn.onclick = () => {
+      sessionStorage.setItem('cv-deneb-from-lib-spec', fn.code || '');
+      sessionStorage.setItem('cv-deneb-from-lib-data', fn.sample_data || '[]');
+      location.href = 'deneb-editor.html?from=lib';
+    };
+  } else {
+    denebBtn.style.display = 'none';
+    denebBtn.onclick = null;
+  }
+
   document.getElementById('modalOverlay').classList.add('open');
 }
 
