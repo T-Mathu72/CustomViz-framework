@@ -984,7 +984,7 @@ document.getElementById('genCopyBtn').addEventListener('click', () => {
     const btn = document.getElementById('genCopyBtn');
     btn.classList.add('copied');
     btn.textContent = 'Copié !';
-    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Copier le SVG généré'; }, 2000);
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = 'Copier le code'; }, 2000);
   });
 });
 

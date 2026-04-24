@@ -1108,6 +1108,21 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
 }
 .sb-toggle svg { width: 20px; }
 
+/* ===== IMAGE UPLOAD ZONE ===== */
+.img-upload-zone {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .6rem; padding: 1.5rem 1rem;
+  border: 1.5px dashed var(--border); border-radius: var(--radius-xs);
+  background: var(--surface2); cursor: pointer;
+  color: var(--text-muted); font-size: .82rem; text-align: center;
+  transition: border-color .15s, background .15s;
+}
+.img-upload-zone:hover, .img-upload-zone.drag-over {
+  border-color: var(--highlight); background: var(--surface);
+  color: var(--text);
+}
+.img-upload-zone.drag-over { border-style: solid; }
+
 /* ===== ADMIN TOASTS ===== */
 .admin-toast {
   position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
