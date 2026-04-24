@@ -333,11 +333,11 @@ document.getElementById('proposalOverlay').addEventListener('click', e => {
 });
 
 async function approveMeasure(id) {
-  const { data: proposal } = await db.from('fonctions').select('*').eq('id', id).single();
+  const { data: proposal, error: fetchErr } = await adminDb.from('fonctions').select('*').eq('id', id).single();
+  if (fetchErr) { showToast('Erreur chargement : ' + fetchErr.message, 'error'); return; }
 
   if (proposal?.original_id) {
-    // Modification : mettre à jour le visuel original puis supprimer la proposition
-    const { error } = await db.from('fonctions')
+    const { error } = await adminDb.from('fonctions')
       .update({
         nom:            proposal.nom,
         type:           proposal.type,
@@ -348,20 +348,24 @@ async function approveMeasure(id) {
         preview:        proposal.preview
       })
       .eq('id', proposal.original_id);
-    if (!error) {
-      await db.from('fonctions').delete().eq('id', id);
-      loadPendingList();
-      loadAdminList();
-    }
+    if (error) { showToast('Erreur approbation : ' + error.message, 'error'); return; }
+    const { error: delErr } = await adminDb.from('fonctions').delete().eq('id', id);
+    if (delErr) { showToast('Approbation OK mais nettoyage échoué : ' + delErr.message, 'error'); return; }
   } else {
-    const { error } = await db.from('fonctions').update({ statut: 'approved' }).eq('id', id);
-    if (!error) { loadPendingList(); loadAdminList(); }
+    const { error } = await adminDb.from('fonctions').update({ statut: 'approved' }).eq('id', id);
+    if (error) { showToast('Erreur approbation : ' + error.message, 'error'); return; }
   }
+
+  showToast('Mesure approuvée !', 'success');
+  loadPendingList();
+  loadAdminList();
 }
 
 async function rejectMeasure(id) {
-  const { error } = await db.from('fonctions').delete().eq('id', id);
-  if (!error) loadPendingList();
+  const { error } = await adminDb.from('fonctions').delete().eq('id', id);
+  if (error) { showToast('Erreur rejet : ' + error.message, 'error'); return; }
+  showToast('Proposition rejetée.', 'info');
+  loadPendingList();
 }
 
 // ============================================================
@@ -419,10 +423,12 @@ document.getElementById('adminSearch').addEventListener('input', e => {
 // ============================================================
 document.getElementById('deleteConfirmBtn').addEventListener('click', async () => {
   if (!pendingDeleteId) return;
-  const { error } = await db.from('fonctions').delete().eq('id', pendingDeleteId);
+  const { error } = await adminDb.from('fonctions').delete().eq('id', pendingDeleteId);
   document.getElementById('deleteOverlay').classList.remove('open');
   pendingDeleteId = null;
-  if (!error) loadAdminList();
+  if (error) { showToast('Erreur suppression : ' + error.message, 'error'); return; }
+  showToast('Mesure supprimée.', 'info');
+  loadAdminList();
 });
 
 document.getElementById('deleteCancel').addEventListener('click', closeDeleteModal);
@@ -441,6 +447,18 @@ function closeDeleteModal() {
 // ============================================================
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `admin-toast admin-toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
+  }, 4000);
 }
 
 // ---- Mobile sidebar ----
