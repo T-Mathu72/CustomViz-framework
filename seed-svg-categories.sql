@@ -13,9 +13,14 @@ DO $$ BEGIN
 END $$;
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS original_id UUID REFERENCES fonctions(id) ON DELETE SET NULL;
 ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS sample_data TEXT;
+ALTER TABLE fonctions ADD COLUMN IF NOT EXISTS generator JSONB;
 
 -- Contrainte unique sur nom pour éviter les doublons lors des re-exécutions
-ALTER TABLE fonctions ADD CONSTRAINT IF NOT EXISTS fonctions_nom_unique UNIQUE (nom);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fonctions_nom_unique') THEN
+    ALTER TABLE fonctions ADD CONSTRAINT fonctions_nom_unique UNIQUE (nom);
+  END IF;
+END $$;
 
 -- 2. Types
 UPDATE fonctions SET type = 'svg'   WHERE type IS NULL OR type = 'dax' OR type = '';

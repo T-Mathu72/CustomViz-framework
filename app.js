@@ -841,10 +841,113 @@ function buildGenericGenerator(fn) {
   applyAndPreview();
 }
 
+// ---- Générateur DSL (champ generator JSONB stocké en BD) ----
+// Format : { params: [...], template: "<svg…{{id}} {{cat.bg}}…</svg>" }
+// Substitutions :
+//   {{id}}        → valeur courante du param "id"
+//   {{id.field}}  → si param "id" est un select avec options-objets, prend option[field]
+function buildDslGenerator(fn) {
+  const form = document.getElementById('genForm');
+  const wrap = document.getElementById('genPreviewWrap');
+  const { params, template } = fn.generator;
+
+  const vals = {};
+  params.forEach(p => {
+    vals[p.id] = p.default !== undefined ? p.default
+              : (p.type === 'select' && p.options?.length ? (typeof p.options[0] === 'object' ? p.options[0].value : p.options[0]) : '');
+  });
+
+  function applyTemplate(tpl) {
+    return tpl.replace(/\{\{\s*([^}\s]+)\s*\}\}/g, (_, expr) => {
+      const [id, sub] = expr.split('.');
+      const param = params.find(p => p.id === id);
+      const v = vals[id];
+      if (sub && param?.type === 'select' && Array.isArray(param.options) && typeof param.options[0] === 'object') {
+        const opt = param.options.find(o => o.value === v);
+        return opt ? (opt[sub] ?? '') : '';
+      }
+      return v ?? '';
+    });
+  }
+
+  function updatePreview() {
+    const svgStr = applyTemplate(template);
+    wrap.innerHTML = stripSvgDims(svgStr);
+    wrap._rawSvg = svgStr;
+  }
+
+  form.innerHTML = params.map(p => {
+    const fmtVal = (v) => p.fmt ? p.fmt(v) : (p.unit ? v + p.unit : v);
+    if (p.type === 'range') {
+      return `<div class="gen-field">
+        <label>${p.label}</label>
+        <div class="gen-field-row">
+          <input type="range" data-id="${p.id}" min="${p.min}" max="${p.max}" step="${p.step ?? 1}" value="${p.default}">
+          <span class="gen-val-badge" id="badge-${p.id}">${fmtVal(p.default)}</span>
+        </div>
+      </div>`;
+    }
+    if (p.type === 'color') {
+      return `<div class="gen-field">
+        <label>${p.label}</label>
+        <div class="gen-field-row">
+          <input type="color" data-id="${p.id}" value="${p.default}">
+          <span class="gen-val-badge" id="badge-${p.id}">${p.default}</span>
+        </div>
+      </div>`;
+    }
+    if (p.type === 'number') {
+      return `<div class="gen-field">
+        <label>${p.label}</label>
+        <input type="number" data-id="${p.id}" value="${p.default}"${p.min !== undefined ? ` min="${p.min}"` : ''}${p.max !== undefined ? ` max="${p.max}"` : ''}>
+      </div>`;
+    }
+    if (p.type === 'text') {
+      return `<div class="gen-field">
+        <label>${p.label}</label>
+        <input type="text" data-id="${p.id}" value="${p.default}" style="width:100%">
+      </div>`;
+    }
+    if (p.type === 'select') {
+      const opts = (p.options || []).map(o => {
+        const val = typeof o === 'object' ? o.value : o;
+        const lbl = typeof o === 'object' ? (o.label ?? o.value) : o;
+        return `<option value="${val}"${val === p.default ? ' selected' : ''}>${lbl}</option>`;
+      }).join('');
+      return `<div class="gen-field">
+        <label>${p.label}</label>
+        <select data-id="${p.id}" class="gen-select">${opts}</select>
+      </div>`;
+    }
+    return '';
+  }).join('');
+
+  form.querySelectorAll('input, select').forEach(el => {
+    const handler = () => {
+      const id = el.dataset.id;
+      const param = params.find(p => p.id === id);
+      vals[id] = (el.type === 'number' || el.type === 'range') ? (parseFloat(el.value) || 0) : el.value;
+      const badge = document.getElementById('badge-' + id);
+      if (badge) badge.textContent = param?.fmt ? param.fmt(vals[id]) : (param?.unit ? vals[id] + param.unit : el.value);
+      updatePreview();
+    };
+    el.addEventListener('input', handler);
+    if (el.tagName === 'SELECT') el.addEventListener('change', handler);
+  });
+
+  updatePreview();
+}
+
 function buildGenerator(fn) {
   const genBtn = document.getElementById('tabGenBtn');
   genBtn.style.display = ''; // toujours visible
   _currentGenFn = fn;
+
+  // Priorité 1 : générateur DSL stocké dans la BD (champ generator JSONB)
+  if (fn.generator && fn.generator.template && Array.isArray(fn.generator.params)) {
+    buildDslGenerator(fn);
+    return;
+  }
 
   const gen = SVG_GENERATORS[fn.nom];
 

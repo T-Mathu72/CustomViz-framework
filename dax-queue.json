@@ -1,0 +1,67 @@
+[Badge Compact = 
+// ===== RÉCUPÉRATION DES VALEURS =====
+VAR Categorie = MAX(D_Formateur[Categorie])  // Ex: "Premium", "Standard", "Basic"
+VAR Valeur = MAX(D_Formateur[Nbr])  // Valeur numérique optionnelle
+
+// ===== DIMENSIONS =====
+VAR Largeur = 100  // Largeur totale du badge
+VAR Hauteur = 28  // Hauteur totale du badge
+VAR BorderRadius = 14  // Arrondi des coins
+VAR TailleIcone = 14  // Taille de l'icône
+VAR TailleTexte = 11  // Taille du texte
+
+// ===== COULEURS PAR CATÉGORIE =====
+VAR CouleurFond = 
+    SWITCH(
+        Categorie,
+        "Premium", "#FEF3C7",  // Jaune doré clair
+        "Standard", "#DBEAFE",  // Bleu clair
+        "Basic", "#F3F4F6",  // Gris clair
+        "#E0E7FF"  // Violet clair par défaut
+    )
+
+VAR CouleurTexte = 
+    SWITCH(
+        Categorie,
+        "Premium", "#92400E",  // Brun doré
+        "Standard", "#1E40AF",  // Bleu foncé
+        "Basic", "#374151",  // Gris foncé
+        "#4338CA"  // Violet foncé par défaut
+    )
+
+VAR CouleurIcone = 
+    SWITCH(
+        Categorie,
+        "Premium", "#F59E0B",  // Or
+        "Standard", "#3B82F6",  // Bleu
+        "Basic", "#6B7280",  // Gris
+        "#6366F1"  // Violet par défaut
+    )
+
+// ===== ICÔNE PAR CATÉGORIE =====
+VAR IconePath = 
+    SWITCH(
+        Categorie,
+        "Premium", "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",  // Étoile brillante
+        "Standard", "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",  // Bouclier check
+        "Basic", "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z",  // Tag
+        "M13 10V3L4 14h7v7l9-11h-7z"  // Éclair par défaut
+    )
+
+VAR Texte = Categorie
+
+// ===== GÉNÉRATION DU SVG =====
+RETURN
+    "data:image/svg+xml;utf8, " &
+    "<svg width='" & Largeur & "' height='" & Hauteur & "' viewBox='0 0 " & Largeur & " " & Hauteur & "' fill='none' xmlns='http://www.w3.org/2000/svg'>" &
+        // Fond du badge
+        "<rect x='0' y='0' width='" & Largeur & "' height='" & Hauteur & "' rx='" & BorderRadius & "' fill='" & CouleurFond & "'/>" &
+        // Icône à gauche
+        "<g transform='translate(8," & ((Hauteur - TailleIcone)/2) & ")'>" &
+            "<svg width='" & TailleIcone & "' height='" & TailleIcone & "' viewBox='0 0 24 24' fill='none' stroke='" & CouleurIcone & "' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>" &
+                "<path d='" & IconePath & "'/>" &
+            "</svg>" &
+        "</g>" &
+        // Texte centré-droit
+        "<text x='28' y='" & (Hauteur/2 + 4) & "' font-family='Segoe UI, sans-serif' font-size='" & TailleTexte & "' font-weight='600' fill='" & CouleurTexte & "'>" & Texte & "</text>" &
+    "</svg>"]

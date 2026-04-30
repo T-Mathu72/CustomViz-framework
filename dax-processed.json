@@ -1,0 +1,31 @@
+[
+  {
+    "nom": "Badge Compact",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Badge",
+    "description": "Badge horizontal compact (100×28 px) avec icône et libellé. La couleur de fond, la couleur de texte et l'icône changent automatiquement en fonction de la catégorie : Premium (or), Standard (bleu), Basic (gris) ou autre (violet par défaut). Idéal pour qualifier visuellement une ligne dans une table Power BI.",
+    "code": "Badge Compact = \n// ===== RÉCUPÉRATION DES VALEURS =====\nVAR Categorie = MAX(D_Formateur[Categorie])  // Ex: \"Premium\", \"Standard\", \"Basic\"\nVAR Valeur = MAX(D_Formateur[Nbr])  // Valeur numérique optionnelle\n\n// ===== DIMENSIONS =====\nVAR Largeur = 100  // Largeur totale du badge\nVAR Hauteur = 28  // Hauteur totale du badge\nVAR BorderRadius = 14  // Arrondi des coins\nVAR TailleIcone = 14  // Taille de l'icône\nVAR TailleTexte = 11  // Taille du texte\n\n// ===== COULEURS PAR CATÉGORIE =====\nVAR CouleurFond = \n    SWITCH(\n        Categorie,\n        \"Premium\", \"#FEF3C7\",  // Jaune doré clair\n        \"Standard\", \"#DBEAFE\",  // Bleu clair\n        \"Basic\", \"#F3F4F6\",  // Gris clair\n        \"#E0E7FF\"  // Violet clair par défaut\n    )\n\nVAR CouleurTexte = \n    SWITCH(\n        Categorie,\n        \"Premium\", \"#92400E\",  // Brun doré\n        \"Standard\", \"#1E40AF\",  // Bleu foncé\n        \"Basic\", \"#374151\",  // Gris foncé\n        \"#4338CA\"  // Violet foncé par défaut\n    )\n\nVAR CouleurIcone = \n    SWITCH(\n        Categorie,\n        \"Premium\", \"#F59E0B\",  // Or\n        \"Standard\", \"#3B82F6\",  // Bleu\n        \"Basic\", \"#6B7280\",  // Gris\n        \"#6366F1\"  // Violet par défaut\n    )\n\n// ===== ICÔNE PAR CATÉGORIE =====\nVAR IconePath = \n    SWITCH(\n        Categorie,\n        \"Premium\", \"M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z\",  // Étoile brillante\n        \"Standard\", \"M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z\",  // Bouclier check\n        \"Basic\", \"M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z\",  // Tag\n        \"M13 10V3L4 14h7v7l9-11h-7z\"  // Éclair par défaut\n    )\n\nVAR Texte = Categorie\n\n// ===== GÉNÉRATION DU SVG =====\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='\" & Largeur & \"' height='\" & Hauteur & \"' viewBox='0 0 \" & Largeur & \" \" & Hauteur & \"' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        // Fond du badge\n        \"<rect x='0' y='0' width='\" & Largeur & \"' height='\" & Hauteur & \"' rx='\" & BorderRadius & \"' fill='\" & CouleurFond & \"'/>\" &\n        // Icône à gauche\n        \"<g transform='translate(8,\" & ((Hauteur - TailleIcone)/2) & \")'>\" &\n            \"<svg width='\" & TailleIcone & \"' height='\" & TailleIcone & \"' viewBox='0 0 24 24' fill='none' stroke='\" & CouleurIcone & \"' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>\" &\n                \"<path d='\" & IconePath & \"'/>\" &\n            \"</svg>\" &\n        \"</g>\" &\n        // Texte centré-droit\n        \"<text x='28' y='\" & (Hauteur/2 + 4) & \"' font-family='Segoe UI, sans-serif' font-size='\" & TailleTexte & \"' font-weight='600' fill='\" & CouleurTexte & \"'>\" & Texte & \"</text>\" &\n    \"</svg>\"",
+    "preview": "<svg width=\"100\" height=\"28\" viewBox=\"0 0 100 28\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"0\" y=\"0\" width=\"100\" height=\"28\" rx=\"14\" fill=\"#FEF3C7\"/>\n  <g transform=\"translate(8, 7)\">\n    <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#F59E0B\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n      <path d=\"M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z\"/>\n    </svg>\n  </g>\n  <text x=\"28\" y=\"18\" font-family=\"Segoe UI, sans-serif\" font-size=\"11\" font-weight=\"600\" fill=\"#92400E\">Premium</text>\n</svg>",
+    "generator": {
+      "params": [
+        {
+          "id": "cat",
+          "label": "Catégorie",
+          "type": "select",
+          "default": "Premium",
+          "options": [
+            { "value": "Premium",  "label": "Premium",  "bg": "#FEF3C7", "text": "#92400E", "icon": "#F59E0B", "iconPath": "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" },
+            { "value": "Standard", "label": "Standard", "bg": "#DBEAFE", "text": "#1E40AF", "icon": "#3B82F6", "iconPath": "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+            { "value": "Basic",    "label": "Basic",    "bg": "#F3F4F6", "text": "#374151", "icon": "#6B7280", "iconPath": "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" },
+            { "value": "Autre",    "label": "Autre (défaut)", "bg": "#E0E7FF", "text": "#4338CA", "icon": "#6366F1", "iconPath": "M13 10V3L4 14h7v7l9-11h-7z" }
+          ]
+        },
+        { "id": "fontSize", "label": "Taille texte", "type": "range", "min": 8, "max": 16, "step": 1, "default": 11, "unit": "px" },
+        { "id": "rx",       "label": "Arrondi",      "type": "range", "min": 0, "max": 14, "step": 1, "default": 14, "unit": "px" }
+      ],
+      "template": "<svg width=\"100\" height=\"28\" viewBox=\"0 0 100 28\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"0\" y=\"0\" width=\"100\" height=\"28\" rx=\"{{rx}}\" fill=\"{{cat.bg}}\"/><g transform=\"translate(8, 7)\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"{{cat.icon}}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"{{cat.iconPath}}\"/></svg></g><text x=\"28\" y=\"18\" font-family=\"Segoe UI, sans-serif\" font-size=\"{{fontSize}}\" font-weight=\"600\" fill=\"{{cat.text}}\">{{cat.label}}</text></svg>"
+    },
+    "statut": "approved"
+  }
+]
