@@ -5,22 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin — CustomViz</title>
   <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('cv-theme') || 'light');</script>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="../assets/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
   <!-- ── Sidebar ── -->
   <aside class="sidebar" id="sidebar">
-    <a href="index.html" class="sb-logo">
-      <img src="datatorii_logo.svg" class="sb-logo-mark" alt="Datatorii"/>
+    <a href="../index.html" class="sb-logo">
+      <img src="../assets/datatorii_logo.svg" class="sb-logo-mark" alt="Datatorii"/>
       <span class="sb-logo-name">CustomViz</span>
       <span class="sb-logo-badge">Beta</span>
     </a>
 
     <div class="sb-section">
       <div class="sb-section-label">Navigation</div>
-      <a href="index.html" class="sb-nav-link">
+      <a href="../index.html" class="sb-nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Bibliothèque
       </a>
@@ -49,7 +49,7 @@
         </button>
         <div style="font-size:.9rem;font-weight:600;color:var(--text-muted)">Administration</div>
         <div class="header-actions">
-          <a href="index.html" class="btn-new" style="background:var(--surface2);color:var(--text-sub);border:1px solid var(--border)">
+          <a href="../index.html" class="btn-new" style="background:var(--surface2);color:var(--text-sub);border:1px solid var(--border)">
             ← Bibliothèque
           </a>
         </div>
@@ -92,7 +92,7 @@
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-box">
       <div class="auth-logo">
-        <img src="datatorii_logo.svg" alt="Datatorii" style="width:38px;height:38px;object-fit:contain"/>
+        <img src="../assets/datatorii_logo.svg" alt="Datatorii" style="width:38px;height:38px;object-fit:contain"/>
       </div>
       <h2 class="auth-title">Administration</h2>
       <p class="auth-sub">Entrez le mot de passe pour accéder à cette page.</p>
@@ -156,8 +156,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="theme.js"></script>
-  <script src="admin.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/theme.js"></script>
+  <script src="../js/admin.js"></script>
 </body>
 </html>

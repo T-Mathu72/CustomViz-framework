@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Éditeur HTML — CustomViz</title>
   <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('cv-theme') || 'light');</script>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="../assets/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     /* ── Layout ─────────────────────────────────────────────────── */
@@ -167,7 +167,7 @@
   <header style="position:sticky;top:0;z-index:10">
     <div class="header-inner">
       <div style="display:flex;align-items:center;gap:.75rem">
-        <a href="index.html" style="color:var(--text-muted);font-size:.82rem;text-decoration:none;display:flex;align-items:center;gap:.3rem">
+        <a href="../index.html" style="color:var(--text-muted);font-size:.82rem;text-decoration:none;display:flex;align-items:center;gap:.3rem">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px"><polyline points="15 18 9 12 15 6"/></svg>
           Bibliothèque
         </a>
@@ -245,7 +245,7 @@
     </div>
   </div>
 
-  <script src="theme.js"></script>
+  <script src="../js/theme.js"></script>
   <script>
     // ── Défaut ───────────────────────────────────────────────────────────
     const DEFAULT_HTML = `<style>

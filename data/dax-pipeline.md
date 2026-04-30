@@ -4,35 +4,46 @@ Ajouter rapidement des mesures DAX à la bibliothèque sans passer par l'UI.
 
 ## Workflow
 
-1. **Toi** — Tu ajoutes tes mesures brutes dans `dax-queue.json` :
-   ```json
-   [
-     { "code": "Ma Mesure = ...", "hint": "barre horizontale rouge" },
-     { "code": "Autre Mesure = ..." }
-   ]
+1. **Toi** — Tu colles tes mesures brutes dans `data/dax-queue.dax` (fichier texte, **pas** JSON) :
+
    ```
-   - `code` : la mesure DAX (obligatoire). Le nom est extrait de la première ligne (`Nom =`).
-   - `hint` : facultatif — un indice pour m'aider à classer / dessiner le SVG.
+   // HINT: barre horizontale rouge clair (facultatif)
+   Jauge Basic Table =
+   VAR Prod = MAX(...)
+   RETURN "..."
 
-2. **Moi (Claude)** — Tu me dis « traite la queue ». Je lis `dax-queue.json` et je remplis `dax-processed.json` avec, pour chaque mesure :
+   ---
+
+   Mini KPI =
+   VAR Val = MAX(...)
+   RETURN "..."
+   ```
+
+   Règles :
+   - DAX brut, **aucun échappement** (les `"` du DAX restent tels quels).
+   - Séparateur : ligne contenant exactement `---` entre deux mesures.
+   - Le nom est extrait de la ligne `Nom =`.
+   - `// HINT: …` (avant un bloc) donne un indice de contexte facultatif.
+
+2. **Moi (Claude)** — Tu me dis « malaxe le marsupial ». Je lis `data/dax-queue.dax` et je remplis `data/dax-processed.json` avec, pour chaque mesure :
    - `nom`, `type` (toujours `svg`), `categorie` (`Table` / `Card`), `sous_categorie` (Jauge, KPI…),
-   - `description`, `code` (DAX nettoyé), `preview` (SVG statique), `statut` (`approved`).
+   - `description`, `code` (DAX nettoyé), `preview` (SVG statique), `generator` (optionnel), `statut` (`approved`).
 
-   Tu peux relire / corriger `dax-processed.json` avant l'ingestion.
+   Tu peux relire / corriger `data/dax-processed.json` avant l'ingestion.
 
-3. **Toi** — Tu lances :
+3. **Toi** — Tu lances depuis la racine du projet :
    ```bash
-   node ingest.js
+   node scripts/ingest.js
    ```
    Le script upsert dans Supabase via `ON CONFLICT (nom) DO UPDATE`. Aucun doublon, ré-exécutable à volonté.
 
 ## Pré-requis
 
 - Node 18+ (pour `fetch` natif).
-- `seed-svg-categories.sql` exécuté une fois (crée la contrainte `UNIQUE (nom)` et les colonnes nécessaires).
-- `ADMIN_SERVICE_KEY` dans `config.js` doit être la clé **service_role** (sinon RLS bloque les écritures).
+- `sql/seed-svg-categories.sql` exécuté une fois (crée la contrainte `UNIQUE (nom)` et les colonnes nécessaires).
+- `ADMIN_SERVICE_KEY` dans `js/config.js` doit être la clé **service_role** (sinon RLS bloque les écritures).
 
-## Format de `dax-processed.json`
+## Format de `data/dax-processed.json`
 
 ```json
 [
@@ -89,4 +100,8 @@ Si `null` → fallback automatique sur `buildGenericGenerator` (couleurs/stroke/
 
 ## Vider la queue après ingestion
 
-Une fois `node ingest.js` réussi, tu peux remettre `dax-queue.json` et `dax-processed.json` à `[]` pour préparer le prochain lot.
+Une fois `node scripts/ingest.js` réussi, tu peux :
+- vider `data/dax-queue.dax` (effacer les mesures, garder l'en-tête),
+- remettre `data/dax-processed.json` à `[]`.
+
+Prêt pour le prochain lot.

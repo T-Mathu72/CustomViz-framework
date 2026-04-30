@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // ============================================================
-//  ingest.js — Upsert dax-processed.json into Supabase fonctions
-//  Usage : node ingest.js
+//  ingest.js — Upsert data/dax-processed.json into Supabase fonctions
+//  Usage : node scripts/ingest.js  (depuis la racine du projet)
 //
-//  - Lit SUPABASE_URL et ADMIN_SERVICE_KEY depuis config.js
+//  - Lit SUPABASE_URL et ADMIN_SERVICE_KEY depuis js/config.js
 //  - Upsert sur la colonne UNIQUE "nom" (merge-duplicates)
 //  - Idempotent : peut être ré-exécuté sans créer de doublons
 // ============================================================
@@ -11,9 +11,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = __dirname;
-const PROCESSED = path.join(ROOT, 'dax-processed.json');
-const CONFIG = path.join(ROOT, 'config.js');
+const ROOT = path.resolve(__dirname, '..');
+const PROCESSED = path.join(ROOT, 'data', 'dax-processed.json');
+const CONFIG = path.join(ROOT, 'js', 'config.js');
 
 // ── 1. Lire la config Supabase ──────────────────────────────
 if (!fs.existsSync(CONFIG)) {
