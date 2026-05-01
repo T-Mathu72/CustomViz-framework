@@ -726,8 +726,8 @@ function buildGenericGenerator(fn) {
   const fields = [];
   const mods   = {};
 
-  // ── Couleurs uniques (fill / stroke) ──
-  const colorRx = /(?:fill|stroke)="(#[0-9A-Fa-f]{3,8})"/g;
+  // ── Couleurs uniques (fill / stroke) — accepte " ou ' ──
+  const colorRx = /(?:fill|stroke)=["'](#[0-9A-Fa-f]{3,8})["']/g;
   const seenC = new Map(); // color → count
   let cm;
   while ((cm = colorRx.exec(svgOrig)) !== null) {
@@ -741,42 +741,42 @@ function buildGenericGenerator(fn) {
   });
 
   // ── Stroke-width ──
-  const swM = svgOrig.match(/stroke-width="([0-9.]+)"/);
+  const swM = svgOrig.match(/stroke-width=["']([0-9.]+)["']/);
   if (swM) {
     mods['sw'] = { type: 'attr', attr: 'stroke-width', original: swM[1], current: swM[1] };
     fields.push({ id: 'sw', type: 'range', label: 'Épaisseur trait', min: 0.5, max: 12, step: 0.5, default: +swM[1], fmt: v => v });
   }
 
   // ── Opacity ──
-  const opM = svgOrig.match(/\bopacity="([0-9.]+)"/);
+  const opM = svgOrig.match(/\bopacity=["']([0-9.]+)["']/);
   if (opM) {
     mods['op'] = { type: 'attr', attr: 'opacity', original: opM[1], current: opM[1] };
     fields.push({ id: 'op', type: 'range', label: 'Opacité', min: 0, max: 1, step: 0.05, default: +opM[1], fmt: v => Math.round(v*100)+'%' });
   }
 
   // ── Font-size ──
-  const fsM = svgOrig.match(/font-size="([0-9.]+)"/);
+  const fsM = svgOrig.match(/font-size=["']([0-9.]+)["']/);
   if (fsM) {
     mods['fs'] = { type: 'attr', attr: 'font-size', original: fsM[1], current: fsM[1] };
     fields.push({ id: 'fs', type: 'range', label: 'Taille texte', min: 6, max: 36, step: 1, default: +fsM[1], fmt: v => v+'px' });
   }
 
   // ── Rx (arrondi) ──
-  const rxM = svgOrig.match(/\brx="([0-9.]+)"/);
+  const rxM = svgOrig.match(/\brx=["']([0-9.]+)["']/);
   if (rxM) {
     mods['rx'] = { type: 'attr', attr: 'rx', original: rxM[1], current: rxM[1] };
     fields.push({ id: 'rx', type: 'range', label: 'Arrondi', min: 0, max: 20, step: 1, default: +rxM[1], fmt: v => v+'px' });
   }
 
   // ── Stroke-linecap (dropdown) ──
-  const lcM = svgOrig.match(/stroke-linecap="([^"]+)"/);
+  const lcM = svgOrig.match(/stroke-linecap=["']([^"']+)["']/);
   if (lcM) {
     mods['lc'] = { type: 'attr', attr: 'stroke-linecap', original: lcM[1], current: lcM[1] };
     fields.push({ id: 'lc', type: 'select', label: 'Extrémités', options: ['round','square','butt'], default: lcM[1] });
   }
 
   // ── Stroke-linejoin (dropdown) ──
-  const ljM = svgOrig.match(/stroke-linejoin="([^"]+)"/);
+  const ljM = svgOrig.match(/stroke-linejoin=["']([^"']+)["']/);
   if (ljM) {
     mods['lj'] = { type: 'attr', attr: 'stroke-linejoin', original: ljM[1], current: ljM[1] };
     fields.push({ id: 'lj', type: 'select', label: 'Jointures', options: ['round','miter','bevel'], default: ljM[1] });
@@ -819,7 +819,9 @@ function buildGenericGenerator(fn) {
       if (mod.type === 'color') {
         svg = svg.replaceAll(mod.original, mod.current);
       } else {
+        // Remplace que ce soit attr="…" ou attr='…'
         svg = svg.replaceAll(`${mod.attr}="${mod.original}"`, `${mod.attr}="${mod.current}"`);
+        svg = svg.replaceAll(`${mod.attr}='${mod.original}'`, `${mod.attr}='${mod.current}'`);
       }
     }
     wrap.innerHTML = stripSvgDims(svg);

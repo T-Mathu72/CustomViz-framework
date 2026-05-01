@@ -1,114 +1,348 @@
 [
   {
-    "nom": "Jauge Circulaire",
+    "nom": "Sparkline Ligne",
     "type": "svg",
     "categorie": "Table",
-    "sous_categorie": "Jauge",
-    "description": "Jauge circulaire compacte (80×28 px) combinant un anneau de progression coloré et un pourcentage à droite. La couleur de l'arc s'adapte aux seuils : rouge < 25 %, orange < 50 %, bleu < 75 %, vert au-delà.",
-    "code": "Jauge Circulaire =\n// ===== RÉCUPÉRATION DES VALEURS =====\nVAR Valeur = MAX(D_Formateur[%R&D])  // Récupère la valeur texte (ex: \"102 %\")\nVAR ValeurCapped = MIN(1, MAX(0, Valeur))  // Plafonné entre 0 et 1\n\n// ===== DIMENSIONS =====\nVAR Largeur = 80  // Largeur totale du SVG\nVAR Hauteur = 28  // Hauteur totale du SVG\nVAR Rayon = 10  // Rayon du cercle\nVAR EpaisseurArc = 4  // Épaisseur de l'arc\nVAR CentreX = 18  // Position X du centre\nVAR CentreY = 14  // Position Y du centre\n\n// ===== CALCULS POUR L'ARC =====\nVAR Circonference = 2 * 3.14159 * Rayon\nVAR DashLength = Circonference * ValeurCapped\nVAR GapLength = Circonference - DashLength\n\n// ===== COULEURS =====\nVAR CouleurFond = \"#C5C5C5\"\nVAR CouleurArc =\n    IF(\n        Valeur >= 0.75, \"#10B981\",\n        IF(Valeur >= 0.5, \"#3B82F6\",\n        IF(Valeur >= 0.25, \"#F59E0B\", \"#EF4444\"))\n    )\n\n// ===== TEXTE =====\nVAR TextePourcentage = INT(Valeur * 100) & \" %\"\nVAR TailleTexte = 12\nVAR PositionTexteX = 40\nVAR PositionTexteY = 18\n\n// ===== GÉNÉRATION DU SVG =====\nRETURN\n    \"data:image/svg+xml;utf8,\" &\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='\" & Largeur & \"' height='\" & Hauteur & \"'>\" &\n        \"<text x='0' y='0' font-size='0' fill='transparent'>\" & Valeur & \"</text>\" &\n        \"<circle cx='\" & CentreX & \"' cy='\" & CentreY & \"' r='\" & Rayon & \"' fill='none' stroke='\" & CouleurFond & \"' stroke-width='\" & EpaisseurArc & \"'/>\" &\n        \"<circle cx='\" & CentreX & \"' cy='\" & CentreY & \"' r='\" & Rayon & \"' fill='none' stroke='\" & CouleurArc & \"' stroke-width='\" & EpaisseurArc & \"' stroke-linecap='round' transform='rotate(-90 \" & CentreX & \" \" & CentreY & \")' stroke-dasharray='\" & DashLength & \" \" & GapLength & \"'/>\" &\n        \"<text x='\" & PositionTexteX & \"' y='\" & PositionTexteY & \"' font-family='Segoe UI, Arial' font-size='\" & TailleTexte & \"' font-weight='700' fill='\" & CouleurArc & \"'>\" & TextePourcentage & \"</text>\" &\n    \"</svg>\"",
-    "preview": "<svg xmlns='http://www.w3.org/2000/svg' width='80' height='28'>\n  <circle cx='18' cy='14' r='10' fill='none' stroke='#C5C5C5' stroke-width='4'/>\n  <circle cx='18' cy='14' r='10' fill='none' stroke='#10B981' stroke-width='4' stroke-linecap='round' transform='rotate(-90 18 14)' stroke-dasharray='47.12 15.71'/>\n  <text x='40' y='18' font-family='Segoe UI, Arial' font-size='12' font-weight='700' fill='#10B981'>75 %</text>\n</svg>",
+    "sous_categorie": "Tendance",
+    "description": "Mini-courbe de tendance sur 6 points (80×24 px). Le tracé devient vert si la valeur finale est ≥ à la valeur initiale, rouge sinon. Un point marque le dernier mois.",
+    "code": "Sparkline Ligne =\nVAR V1 = MAX(D_Formateur[Mois1])\nVAR V2 = MAX(D_Formateur[Mois2])\nVAR V3 = MAX(D_Formateur[Mois3])\nVAR V4 = MAX(D_Formateur[Mois4])\nVAR V5 = MAX(D_Formateur[Mois5])\nVAR V6 = MAX(D_Formateur[Mois6])\n\nVAR MaxV = MAX(MAX(MAX(MAX(MAX(V1,V2),V3),V4),V5),V6)\nVAR MinV = MIN(MIN(MIN(MIN(MIN(V1,V2),V3),V4),V5),V6)\nVAR Range = MAX(MaxV - MinV, 1)\n\nVAR H = 24\nVAR PadY = 2\nVAR Y1 = H - PadY - INT(DIVIDE(V1 - MinV, Range) * (H - 2*PadY))\nVAR Y2 = H - PadY - INT(DIVIDE(V2 - MinV, Range) * (H - 2*PadY))\nVAR Y3 = H - PadY - INT(DIVIDE(V3 - MinV, Range) * (H - 2*PadY))\nVAR Y4 = H - PadY - INT(DIVIDE(V4 - MinV, Range) * (H - 2*PadY))\nVAR Y5 = H - PadY - INT(DIVIDE(V5 - MinV, Range) * (H - 2*PadY))\nVAR Y6 = H - PadY - INT(DIVIDE(V6 - MinV, Range) * (H - 2*PadY))\n\nVAR Couleur = IF(V6 >= V1, \"#10B981\", \"#EF4444\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='80' height='24' viewBox='0 0 80 24' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<polyline fill='none' stroke='\" & Couleur & \"' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' points='\" &\n            \"2,\" & Y1 & \" 17,\" & Y2 & \" 32,\" & Y3 & \" 47,\" & Y4 & \" 62,\" & Y5 & \" 77,\" & Y6 &\n        \"'/>\" &\n        \"<circle cx='77' cy='\" & Y6 & \"' r='2.5' fill='\" & Couleur & \"'/>\" &\n    \"</svg>\"",
+    "preview": "<svg width='80' height='24' viewBox='0 0 80 24' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <polyline fill='none' stroke='#10B981' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' points='2,11 17,22 32,7 47,16 62,2 77,9'/>\n  <circle cx='77' cy='9' r='2.5' fill='#10B981'/>\n</svg>",
     "generator": null,
     "statut": "approved"
   },
   {
-    "nom": "Pastille Tendance",
+    "nom": "Mini Heatmap Cellule",
     "type": "svg",
     "categorie": "Table",
-    "sous_categorie": "Tendance",
-    "description": "Pastille de tendance (95×26 px) qui colore le fond, la flèche et le pourcentage selon le signe du delta entre une valeur courante et une référence : vert (hausse), rouge (baisse), gris (stable).",
-    "code": "Pastille Tendance =\n// ===== RÉCUPÉRATION DES VALEURS =====\nVAR ValeurActuelle = MAX(D_Formateur[Nbr])\nVAR ValeurRef = MAX(D_Formateur[Nbr2])\nVAR Delta = ValeurActuelle - ValeurRef\nVAR DeltaPct = DIVIDE(Delta, ValeurRef, 0)\n\n// ===== DIMENSIONS =====\nVAR Largeur = 95\nVAR Hauteur = 26\nVAR BorderRadius = 13\n\n// ===== COULEURS =====\nVAR CouleurFond =\n    IF(Delta > 0, \"#DCFCE7\",\n    IF(Delta < 0, \"#FEE2E2\", \"#F3F4F6\"))\nVAR CouleurAccent =\n    IF(Delta > 0, \"#15803D\",\n    IF(Delta < 0, \"#DC2626\", \"#6B7280\"))\n\n// ===== ICÔNE FLÈCHE =====\nVAR Icone =\n    IF(Delta > 0,\n        \"<polygon points='7,0 14,10 10,10 10,14 4,14 4,10 0,10' fill='\" & CouleurAccent & \"'/>\",\n    IF(Delta < 0,\n        \"<polygon points='7,14 0,4 4,4 4,0 10,0 10,4 14,4' fill='\" & CouleurAccent & \"'/>\",\n        \"<rect x='0' y='5.5' width='11' height='3' rx='1.5' fill='\" & CouleurAccent & \"'/><polygon points='9,3 14,7 9,11' fill='\" & CouleurAccent & \"'/>\"))\n\nVAR Texte = FORMAT(ABS(DeltaPct), \"0.0%\")\n\n// ===== GÉNÉRATION DU SVG =====\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='\" & Largeur & \"' height='\" & Hauteur & \"' viewBox='0 0 \" & Largeur & \" \" & Hauteur & \"' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<rect x='0' y='0' width='\" & Largeur & \"' height='\" & Hauteur & \"' rx='\" & BorderRadius & \"' fill='\" & CouleurFond & \"'/>\" &\n        \"<g transform='translate(10,\" & ((Hauteur - 14) / 2) & \")'>\" &\n            \"<svg width='14' height='14' viewBox='0 0 14 14'>\" & Icone & \"</svg>\" &\n        \"</g>\" &\n        \"<text x='30' y='\" & (Hauteur / 2 + 4) & \"' font-family='Segoe UI, sans-serif' font-size='11' font-weight='600' fill='\" & CouleurAccent & \"'>\" & Texte & \"</text>\" &\n    \"</svg>\"",
-    "preview": "<svg width='95' height='26' viewBox='0 0 95 26' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <rect x='0' y='0' width='95' height='26' rx='13' fill='#DCFCE7'/>\n  <g transform='translate(10, 6)'>\n    <svg width='14' height='14' viewBox='0 0 14 14'>\n      <polygon points='7,0 14,10 10,10 10,14 4,14 4,10 0,10' fill='#15803D'/>\n    </svg>\n  </g>\n  <text x='30' y='17' font-family='Segoe UI, sans-serif' font-size='11' font-weight='600' fill='#15803D'>8.4%</text>\n</svg>",
+    "sous_categorie": "Heatmap",
+    "description": "Cellule de heatmap (44×28 px) avec dégradé rouge clair → rouge foncé selon la valeur, et pourcentage centré. Le texte passe en blanc dès 60 % pour rester lisible sur fond foncé.",
+    "code": "Mini Heatmap Cellule =\nVAR Valeur = MAX(D_Formateur[%R&D])\nVAR ValeurCapped = MIN(1, MAX(0, Valeur))\n\nVAR Couleur =\n    SWITCH(TRUE(),\n        ValeurCapped < 0.2,  \"#FEE2E2\",\n        ValeurCapped < 0.4,  \"#FECACA\",\n        ValeurCapped < 0.6,  \"#FCA5A5\",\n        ValeurCapped < 0.8,  \"#F87171\",\n                             \"#EF4444\")\n\nVAR Texte = INT(ValeurCapped * 100) & \"%\"\nVAR CouleurTexte = IF(ValeurCapped >= 0.6, \"#FFFFFF\", \"#7F1D1D\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='44' height='28' viewBox='0 0 44 28' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<rect x='1' y='1' width='42' height='26' rx='3' fill='\" & Couleur & \"'/>\" &\n        \"<text x='22' y='19' font-family='Segoe UI, sans-serif' font-size='11' font-weight='700' text-anchor='middle' fill='\" & CouleurTexte & \"'>\" & Texte & \"</text>\" &\n    \"</svg>\"",
+    "preview": "<svg width='44' height='28' viewBox='0 0 44 28' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <rect x='1' y='1' width='42' height='26' rx='3' fill='#F87171'/>\n  <text x='22' y='19' font-family='Segoe UI, sans-serif' font-size='11' font-weight='700' text-anchor='middle' fill='#FFFFFF'>70%</text>\n</svg>",
     "generator": {
       "params": [
         {
-          "id": "trend",
-          "label": "Tendance",
+          "id": "level",
+          "label": "Niveau",
+          "type": "select",
+          "default": "high",
+          "options": [
+            {
+              "value": "veryLow",
+              "label": "10 %",
+              "bg": "#FEE2E2",
+              "color": "#7F1D1D",
+              "text": "10%"
+            },
+            {
+              "value": "low",
+              "label": "30 %",
+              "bg": "#FECACA",
+              "color": "#7F1D1D",
+              "text": "30%"
+            },
+            {
+              "value": "medium",
+              "label": "50 %",
+              "bg": "#FCA5A5",
+              "color": "#7F1D1D",
+              "text": "50%"
+            },
+            {
+              "value": "high",
+              "label": "70 %",
+              "bg": "#F87171",
+              "color": "#FFFFFF",
+              "text": "70%"
+            },
+            {
+              "value": "veryHigh",
+              "label": "90 %",
+              "bg": "#EF4444",
+              "color": "#FFFFFF",
+              "text": "90%"
+            }
+          ]
+        }
+      ],
+      "template": "<svg width='44' height='28' viewBox='0 0 44 28' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='1' y='1' width='42' height='26' rx='3' fill='{{level.bg}}'/><text x='22' y='19' font-family='Segoe UI, sans-serif' font-size='11' font-weight='700' text-anchor='middle' fill='{{level.color}}'>{{level.text}}</text></svg>"
+    },
+    "statut": "approved"
+  },
+  {
+    "nom": "Statut Coche",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Statut",
+    "description": "Indicateur booléen circulaire (28×28 px) — coche blanche sur fond vert si la condition est validée, croix blanche sur fond rouge sinon.",
+    "code": "Statut Coche =\nVAR Etat = MAX(D_Formateur[Validé])\nVAR EstValide = (Etat = 1) || (Etat = TRUE())\nVAR Couleur = IF(EstValide, \"#10B981\", \"#EF4444\")\nVAR Icone =\n    IF(EstValide,\n        \"<polyline points='8,15 12,19 20,10' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/>\",\n        \"<line x1='9' y1='9' x2='19' y2='19' stroke='white' stroke-width='2.5' stroke-linecap='round'/><line x1='19' y1='9' x2='9' y2='19' stroke='white' stroke-width='2.5' stroke-linecap='round'/>\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='28' height='28' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<circle cx='14' cy='14' r='12' fill='\" & Couleur & \"'/>\" &\n        Icone &\n    \"</svg>\"",
+    "preview": "<svg width='28' height='28' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <circle cx='14' cy='14' r='12' fill='#10B981'/>\n  <polyline points='8,15 12,19 20,10' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/>\n</svg>",
+    "generator": {
+      "params": [
+        {
+          "id": "state",
+          "label": "État",
+          "type": "select",
+          "default": "valid",
+          "options": [
+            {
+              "value": "valid",
+              "label": "Validé",
+              "bg": "#10B981",
+              "icon": "<polyline points='8,15 12,19 20,10' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/>"
+            },
+            {
+              "value": "invalid",
+              "label": "Refusé",
+              "bg": "#EF4444",
+              "icon": "<line x1='9' y1='9' x2='19' y2='19' stroke='white' stroke-width='2.5' stroke-linecap='round'/><line x1='19' y1='9' x2='9' y2='19' stroke='white' stroke-width='2.5' stroke-linecap='round'/>"
+            }
+          ]
+        }
+      ],
+      "template": "<svg width='28' height='28' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='14' cy='14' r='12' fill='{{state.bg}}'/>{{state.icon}}</svg>"
+    },
+    "statut": "approved"
+  },
+  {
+    "nom": "Pastille Statut",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Statut",
+    "description": "Petite pastille circulaire (20×20 px) à 4 états : OK (vert), Warning (orange), Erreur (rouge), Inconnu (gris). Halo de la même teinte autour du point central.",
+    "code": "Pastille Statut =\nVAR Niveau = MAX(D_Formateur[Statut])\nVAR Couleur = SWITCH(Niveau, \"ok\", \"#10B981\", \"warn\", \"#F59E0B\", \"error\", \"#EF4444\", \"#9CA3AF\")\nVAR CouleurHalo = SWITCH(Niveau, \"ok\", \"#D1FAE5\", \"warn\", \"#FEF3C7\", \"error\", \"#FEE2E2\", \"#F3F4F6\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<circle cx='10' cy='10' r='9' fill='\" & CouleurHalo & \"'/>\" &\n        \"<circle cx='10' cy='10' r='5' fill='\" & Couleur & \"'/>\" &\n    \"</svg>\"",
+    "preview": "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <circle cx='10' cy='10' r='9' fill='#D1FAE5'/>\n  <circle cx='10' cy='10' r='5' fill='#10B981'/>\n</svg>",
+    "generator": {
+      "params": [
+        {
+          "id": "state",
+          "label": "État",
+          "type": "select",
+          "default": "ok",
+          "options": [
+            {
+              "value": "ok",
+              "label": "OK",
+              "halo": "#D1FAE5",
+              "dot": "#10B981"
+            },
+            {
+              "value": "warn",
+              "label": "Warning",
+              "halo": "#FEF3C7",
+              "dot": "#F59E0B"
+            },
+            {
+              "value": "error",
+              "label": "Erreur",
+              "halo": "#FEE2E2",
+              "dot": "#EF4444"
+            },
+            {
+              "value": "unknown",
+              "label": "Inconnu",
+              "halo": "#F3F4F6",
+              "dot": "#9CA3AF"
+            }
+          ]
+        }
+      ],
+      "template": "<svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='10' cy='10' r='9' fill='{{state.halo}}'/><circle cx='10' cy='10' r='5' fill='{{state.dot}}'/></svg>"
+    },
+    "statut": "approved"
+  },
+  {
+    "nom": "Indicateur Battery",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Jauge",
+    "description": "Icône batterie horizontale (44×22 px) à 4 niveaux. La couleur des cases remplies suit les seuils 25 % / 50 % (rouge → orange → vert), et chaque case s'allume au-delà de 10 / 35 / 60 / 85 % de charge.",
+    "code": "Indicateur Battery =\nVAR Niveau = MAX(D_Formateur[%R&D])\nVAR NiveauCapped = MIN(1, MAX(0, Niveau))\n\nVAR Couleur =\n    SWITCH(TRUE(),\n        NiveauCapped >= 0.5,  \"#10B981\",\n        NiveauCapped >= 0.25, \"#F59E0B\",\n                              \"#EF4444\")\nVAR CouleurVide = \"#E5E7EB\"\n\nVAR B1 = IF(NiveauCapped >= 0.1,  Couleur, CouleurVide)\nVAR B2 = IF(NiveauCapped >= 0.35, Couleur, CouleurVide)\nVAR B3 = IF(NiveauCapped >= 0.6,  Couleur, CouleurVide)\nVAR B4 = IF(NiveauCapped >= 0.85, Couleur, CouleurVide)\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='44' height='22' viewBox='0 0 44 22' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<rect x='1' y='3' width='38' height='16' rx='2' fill='none' stroke='#374151' stroke-width='1.5'/>\" &\n        \"<rect x='40' y='8' width='3' height='6' rx='1' fill='#374151'/>\" &\n        \"<rect x='4'  y='6' width='7' height='10' rx='1' fill='\" & B1 & \"'/>\" &\n        \"<rect x='13' y='6' width='7' height='10' rx='1' fill='\" & B2 & \"'/>\" &\n        \"<rect x='22' y='6' width='7' height='10' rx='1' fill='\" & B3 & \"'/>\" &\n        \"<rect x='31' y='6' width='7' height='10' rx='1' fill='\" & B4 & \"'/>\" &\n    \"</svg>\"",
+    "preview": "<svg width='44' height='22' viewBox='0 0 44 22' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <rect x='1' y='3' width='38' height='16' rx='2' fill='none' stroke='#374151' stroke-width='1.5'/>\n  <rect x='40' y='8' width='3' height='6' rx='1' fill='#374151'/>\n  <rect x='4'  y='6' width='7' height='10' rx='1' fill='#10B981'/>\n  <rect x='13' y='6' width='7' height='10' rx='1' fill='#10B981'/>\n  <rect x='22' y='6' width='7' height='10' rx='1' fill='#10B981'/>\n  <rect x='31' y='6' width='7' height='10' rx='1' fill='#E5E7EB'/>\n</svg>",
+    "generator": {
+      "params": [
+        {
+          "id": "charge",
+          "label": "Charge",
+          "type": "select",
+          "default": "good",
+          "options": [
+            {
+              "value": "low",
+              "label": "Faible (15 %)",
+              "b1": "#EF4444",
+              "b2": "#E5E7EB",
+              "b3": "#E5E7EB",
+              "b4": "#E5E7EB"
+            },
+            {
+              "value": "medium",
+              "label": "Moyenne (40 %)",
+              "b1": "#F59E0B",
+              "b2": "#F59E0B",
+              "b3": "#E5E7EB",
+              "b4": "#E5E7EB"
+            },
+            {
+              "value": "good",
+              "label": "Bonne (60 %)",
+              "b1": "#10B981",
+              "b2": "#10B981",
+              "b3": "#10B981",
+              "b4": "#E5E7EB"
+            },
+            {
+              "value": "full",
+              "label": "Pleine (90 %)",
+              "b1": "#10B981",
+              "b2": "#10B981",
+              "b3": "#10B981",
+              "b4": "#10B981"
+            }
+          ]
+        }
+      ],
+      "template": "<svg width='44' height='22' viewBox='0 0 44 22' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='1' y='3' width='38' height='16' rx='2' fill='none' stroke='#374151' stroke-width='1.5'/><rect x='40' y='8' width='3' height='6' rx='1' fill='#374151'/><rect x='4'  y='6' width='7' height='10' rx='1' fill='{{charge.b1}}'/><rect x='13' y='6' width='7' height='10' rx='1' fill='{{charge.b2}}'/><rect x='22' y='6' width='7' height='10' rx='1' fill='{{charge.b3}}'/><rect x='31' y='6' width='7' height='10' rx='1' fill='{{charge.b4}}'/></svg>"
+    },
+    "statut": "approved"
+  },
+  {
+    "nom": "Avatar Initiales",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Avatar",
+    "description": "Avatar circulaire (32×32 px) qui affiche les initiales d'un nom (prénom + nom). La couleur de fond est calculée de façon déterministe à partir du code Unicode de la première lettre — chaque personne a sa teinte stable parmi 6 couleurs.",
+    "code": "Avatar Initiales =\nVAR Nom = MAX(D_Formateur[Nom])\nVAR Initiale1 = LEFT(Nom, 1)\nVAR PartieApresEspace = MID(Nom, FIND(\" \", Nom & \" \", 1, 99) + 1, 1)\nVAR Initiales = UPPER(Initiale1 & PartieApresEspace)\n\nVAR Code = UNICODE(UPPER(Initiale1))\nVAR ModC = MOD(Code, 6)\nVAR Couleur =\n    SWITCH(ModC,\n        0, \"#6366F1\",\n        1, \"#8B5CF6\",\n        2, \"#EC4899\",\n        3, \"#F59E0B\",\n        4, \"#10B981\",\n           \"#3B82F6\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<circle cx='16' cy='16' r='15' fill='\" & Couleur & \"'/>\" &\n        \"<text x='16' y='21' font-family='Segoe UI, sans-serif' font-size='13' font-weight='700' text-anchor='middle' fill='white'>\" & Initiales & \"</text>\" &\n    \"</svg>\"",
+    "preview": "<svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <circle cx='16' cy='16' r='15' fill='#6366F1'/>\n  <text x='16' y='21' font-family='Segoe UI, sans-serif' font-size='13' font-weight='700' text-anchor='middle' fill='white'>TM</text>\n</svg>",
+    "generator": {
+      "params": [
+        {
+          "id": "initials",
+          "label": "Initiales",
+          "type": "text",
+          "default": "TM"
+        },
+        {
+          "id": "color",
+          "label": "Couleur",
+          "type": "color",
+          "default": "#6366F1"
+        }
+      ],
+      "template": "<svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='16' cy='16' r='15' fill='{{color}}'/><text x='16' y='21' font-family='Segoe UI, sans-serif' font-size='13' font-weight='700' text-anchor='middle' fill='white'>{{initials}}</text></svg>"
+    },
+    "statut": "approved"
+  },
+  {
+    "nom": "Étiquette Prix",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Étiquette",
+    "description": "Étiquette de prix forme tag (80×26 px) avec pointe à droite et trou de perforation blanc. La couleur de fond reflète la gamme de prix : gris < 100 €, vert < 500 €, bleu < 1000 €, violet au-delà.",
+    "code": "Étiquette Prix =\nVAR Prix = MAX(D_Formateur[Prix])\nVAR Texte = FORMAT(Prix, \"0 €\")\n\nVAR Couleur =\n    SWITCH(TRUE(),\n        Prix >= 1000, \"#7C3AED\",\n        Prix >= 500,  \"#3B82F6\",\n        Prix >= 100,  \"#10B981\",\n                      \"#9CA3AF\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='80' height='26' viewBox='0 0 80 26' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<path d='M2 3 L66 3 L76 13 L66 23 L2 23 Z' fill='\" & Couleur & \"'/>\" &\n        \"<circle cx='66' cy='13' r='2.5' fill='white'/>\" &\n        \"<text x='10' y='17' font-family='Segoe UI, sans-serif' font-size='11' font-weight='700' fill='white'>\" & Texte & \"</text>\" &\n    \"</svg>\"",
+    "preview": "<svg width='80' height='26' viewBox='0 0 80 26' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <path d='M2 3 L66 3 L76 13 L66 23 L2 23 Z' fill='#3B82F6'/>\n  <circle cx='66' cy='13' r='2.5' fill='white'/>\n  <text x='10' y='17' font-family='Segoe UI, sans-serif' font-size='11' font-weight='700' fill='white'>750 €</text>\n</svg>",
+    "generator": {
+      "params": [
+        {
+          "id": "tier",
+          "label": "Gamme",
+          "type": "select",
+          "default": "premium",
+          "options": [
+            {
+              "value": "eco",
+              "label": "Économique",
+              "color": "#9CA3AF",
+              "text": "50 €"
+            },
+            {
+              "value": "standard",
+              "label": "Standard",
+              "color": "#10B981",
+              "text": "250 €"
+            },
+            {
+              "value": "premium",
+              "label": "Premium",
+              "color": "#3B82F6",
+              "text": "750 €"
+            },
+            {
+              "value": "luxe",
+              "label": "Luxe",
+              "color": "#7C3AED",
+              "text": "1500 €"
+            }
+          ]
+        }
+      ],
+      "template": "<svg width='80' height='26' viewBox='0 0 80 26' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M2 3 L66 3 L76 13 L66 23 L2 23 Z' fill='{{tier.color}}'/><circle cx='66' cy='13' r='2.5' fill='white'/><text x='10' y='17' font-family='Segoe UI, sans-serif' font-size='11' font-weight='700' fill='white'>{{tier.text}}</text></svg>"
+    },
+    "statut": "approved"
+  },
+  {
+    "nom": "Mini Donut KPI",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Jauge",
+    "description": "Mini donut (32×32 px) avec anneau de progression et pourcentage centré. La couleur de l'anneau s'adapte aux seuils 25 / 50 / 75 % (rouge → orange → bleu → vert).",
+    "code": "Mini Donut KPI =\nVAR Valeur = MAX(D_Formateur[%R&D])\nVAR ValeurCapped = MIN(1, MAX(0, Valeur))\n\nVAR Couleur =\n    IF(ValeurCapped >= 0.75, \"#10B981\",\n    IF(ValeurCapped >= 0.5,  \"#3B82F6\",\n    IF(ValeurCapped >= 0.25, \"#F59E0B\", \"#EF4444\")))\n\nVAR Rayon = 12\nVAR Circ = 2 * 3.14159 * Rayon\nVAR Dash = Circ * ValeurCapped\nVAR Gap = Circ - Dash\n\nVAR Texte = INT(ValeurCapped * 100) & \"%\"\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<circle cx='16' cy='16' r='\" & Rayon & \"' fill='none' stroke='#E5E7EB' stroke-width='5'/>\" &\n        \"<circle cx='16' cy='16' r='\" & Rayon & \"' fill='none' stroke='\" & Couleur & \"' stroke-width='5' stroke-linecap='round' transform='rotate(-90 16 16)' stroke-dasharray='\" & Dash & \" \" & Gap & \"'/>\" &\n        \"<text x='16' y='19' font-family='Segoe UI, sans-serif' font-size='9' font-weight='700' text-anchor='middle' fill='#374151'>\" & Texte & \"</text>\" &\n    \"</svg>\"",
+    "preview": "<svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <circle cx='16' cy='16' r='12' fill='none' stroke='#E5E7EB' stroke-width='5'/>\n  <circle cx='16' cy='16' r='12' fill='none' stroke='#3B82F6' stroke-width='5' stroke-linecap='round' transform='rotate(-90 16 16)' stroke-dasharray='52.78 22.62'/>\n  <text x='16' y='19' font-family='Segoe UI, sans-serif' font-size='9' font-weight='700' text-anchor='middle' fill='#374151'>70%</text>\n</svg>",
+    "generator": null,
+    "statut": "approved"
+  },
+  {
+    "nom": "Barres Empilées",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Comparaison",
+    "description": "Barre horizontale empilée (120×14 px) montrant la répartition de 3 catégories sur le total : bleu (CatA), vert (CatB), orange (CatC). Le total est normalisé à la largeur du SVG.",
+    "code": "Barres Empilées =\nVAR A = MAX(D_Formateur[CatA])\nVAR B = MAX(D_Formateur[CatB])\nVAR C = MAX(D_Formateur[CatC])\nVAR Total = MAX(A + B + C, 1)\n\nVAR Largeur = 120\nVAR LA = INT(DIVIDE(A, Total) * Largeur)\nVAR LB = INT(DIVIDE(B, Total) * Largeur)\nVAR LC = Largeur - LA - LB\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='120' height='14' viewBox='0 0 120 14' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<rect x='0' y='0' width='\" & LA & \"' height='14' fill='#3B82F6'/>\" &\n        \"<rect x='\" & LA & \"' y='0' width='\" & LB & \"' height='14' fill='#10B981'/>\" &\n        \"<rect x='\" & (LA + LB) & \"' y='0' width='\" & LC & \"' height='14' fill='#F59E0B'/>\" &\n    \"</svg>\"",
+    "preview": "<svg width='120' height='14' viewBox='0 0 120 14' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <rect x='0' y='0' width='48' height='14' fill='#3B82F6'/>\n  <rect x='48' y='0' width='42' height='14' fill='#10B981'/>\n  <rect x='90' y='0' width='30' height='14' fill='#F59E0B'/>\n</svg>",
+    "generator": null,
+    "statut": "approved"
+  },
+  {
+    "nom": "Indicateur Variation",
+    "type": "svg",
+    "categorie": "Table",
+    "sous_categorie": "Tendance",
+    "description": "Flèche colorée + valeur du delta entre deux indicateurs (60×20 px). Vert avec flèche montante si hausse, rouge avec flèche descendante si baisse, gris avec barre horizontale si stable.",
+    "code": "Indicateur Variation =\nVAR Actuel = MAX(D_Formateur[Nbr])\nVAR Reference = MAX(D_Formateur[Nbr2])\nVAR Delta = Actuel - Reference\n\nVAR Sens = IF(Delta > 0, \"up\", IF(Delta < 0, \"down\", \"flat\"))\nVAR Couleur = SWITCH(Sens, \"up\", \"#10B981\", \"down\", \"#EF4444\", \"#6B7280\")\nVAR Fleche =\n    SWITCH(Sens,\n        \"up\",   \"<polygon points='6,2 11,9 7,9 7,14 5,14 5,9 1,9' fill='\" & Couleur & \"'/>\",\n        \"down\", \"<polygon points='6,14 1,7 5,7 5,2 7,2 7,7 11,7' fill='\" & Couleur & \"'/>\",\n                \"<rect x='1' y='6' width='10' height='4' rx='1' fill='\" & Couleur & \"'/>\")\n\nVAR Texte = FORMAT(ABS(Delta), \"+0;-0;0\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='60' height='20' viewBox='0 0 60 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<g transform='translate(2, 3)'>\" &\n            \"<svg width='12' height='14' viewBox='0 0 12 16'>\" & Fleche & \"</svg>\" &\n        \"</g>\" &\n        \"<text x='18' y='14' font-family='Segoe UI, sans-serif' font-size='11' font-weight='600' fill='\" & Couleur & \"'>\" & Texte & \"</text>\" &\n    \"</svg>\"",
+    "preview": "<svg width='60' height='20' viewBox='0 0 60 20' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <g transform='translate(2, 3)'>\n    <svg width='12' height='14' viewBox='0 0 12 16'>\n      <polygon points='6,2 11,9 7,9 7,14 5,14 5,9 1,9' fill='#10B981'/>\n    </svg>\n  </g>\n  <text x='18' y='14' font-family='Segoe UI, sans-serif' font-size='11' font-weight='600' fill='#10B981'>+12</text>\n</svg>",
+    "generator": {
+      "params": [
+        {
+          "id": "sense",
+          "label": "Sens",
           "type": "select",
           "default": "up",
           "options": [
             {
               "value": "up",
               "label": "Hausse",
-              "bg": "#DCFCE7",
-              "accent": "#15803D",
-              "icon": "<polygon points='7,0 14,10 10,10 10,14 4,14 4,10 0,10' fill='#15803D'/>",
-              "text": "8.4%"
+              "color": "#10B981",
+              "icon": "<polygon points='6,2 11,9 7,9 7,14 5,14 5,9 1,9' fill='#10B981'/>",
+              "text": "+12"
             },
             {
               "value": "down",
               "label": "Baisse",
-              "bg": "#FEE2E2",
-              "accent": "#DC2626",
-              "icon": "<polygon points='7,14 0,4 4,4 4,0 10,0 10,4 14,4' fill='#DC2626'/>",
-              "text": "5.2%"
+              "color": "#EF4444",
+              "icon": "<polygon points='6,14 1,7 5,7 5,2 7,2 7,7 11,7' fill='#EF4444'/>",
+              "text": "-8"
             },
             {
               "value": "flat",
               "label": "Stable",
-              "bg": "#F3F4F6",
-              "accent": "#6B7280",
-              "icon": "<rect x='0' y='5.5' width='11' height='3' rx='1.5' fill='#6B7280'/><polygon points='9,3 14,7 9,11' fill='#6B7280'/>",
-              "text": "0.0%"
+              "color": "#6B7280",
+              "icon": "<rect x='1' y='6' width='10' height='4' rx='1' fill='#6B7280'/>",
+              "text": "0"
             }
           ]
-        },
-        {
-          "id": "rx",
-          "label": "Arrondi",
-          "type": "range",
-          "min": 0,
-          "max": 13,
-          "step": 1,
-          "default": 13,
-          "unit": "px"
         }
       ],
-      "template": "<svg width='95' height='26' viewBox='0 0 95 26' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='0' y='0' width='95' height='26' rx='{{rx}}' fill='{{trend.bg}}'/><g transform='translate(10, 6)'><svg width='14' height='14' viewBox='0 0 14 14'>{{trend.icon}}</svg></g><text x='30' y='17' font-family='Segoe UI, sans-serif' font-size='11' font-weight='600' fill='{{trend.accent}}'>{{trend.text}}</text></svg>"
+      "template": "<svg width='60' height='20' viewBox='0 0 60 20' fill='none' xmlns='http://www.w3.org/2000/svg'><g transform='translate(2, 3)'><svg width='12' height='14' viewBox='0 0 12 16'>{{sense.icon}}</svg></g><text x='18' y='14' font-family='Segoe UI, sans-serif' font-size='11' font-weight='600' fill='{{sense.color}}'>{{sense.text}}</text></svg>"
     },
-    "statut": "approved"
-  },
-  {
-    "nom": "Badge Progress",
-    "type": "svg",
-    "categorie": "Table",
-    "sous_categorie": "Jauge",
-    "description": "Badge composite (140×32 px) combinant un libellé pourcentage à gauche et une mini-barre de progression à droite. La couleur de la barre suit les seuils 25 / 50 / 75 % (rouge → orange → bleu → vert).",
-    "code": "Badge Progress =\n// ===== RÉCUPÉRATION ET CALCUL DES VALEURS =====\nVAR Valeur = MAX(D_Formateur[%R&D])\nVAR ValeurAffichee = Valeur\nVAR ValeurBarre = MIN(Valeur, 1)\n\n// ===== DIMENSIONS GÉNÉRALES =====\nVAR Largeur = 140\nVAR Hauteur = 32\nVAR BorderRadius = 16\n\n// ===== DIMENSIONS DE LA BARRE =====\nVAR EpaisseurBarre = 6\nVAR LargeurBarre = 80\nVAR PositionBarreX = 50\nVAR PositionBarreY = (Hauteur - EpaisseurBarre) / 2\nVAR ProgressBarre = INT(LargeurBarre * ValeurBarre)\n\nVAR TaillePolice = 14\n\n// ===== COULEURS =====\nVAR CouleurFond = \"#F8F9FA\"\nVAR CouleurBordure = \"#E9ECEF\"\nVAR CouleurBarreVide = \"#E9ECEF\"\nVAR CouleurProgress =\n    IF(\n        ValeurBarre >= 0.75, \"#10B981\",\n        IF(ValeurBarre >= 0.5, \"#3B82F6\",\n        IF(ValeurBarre >= 0.25, \"#F59E0B\", \"#EF4444\"))\n    )\n\nVAR CouleurTexte = \"#374151\"\nVAR Texte = FORMAT(ValeurAffichee, \"0%\")\n\n// ===== GÉNÉRATION DU SVG =====\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='\" & Largeur & \"' height='\" & Hauteur & \"' viewBox='0 0 \" & Largeur & \" \" & Hauteur & \"' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<rect x='0.5' y='0.5' width='\" & (Largeur - 1) & \"' height='\" & (Hauteur - 1) & \"' rx='\" & (BorderRadius - 0.5) & \"' fill='\" & CouleurFond & \"' stroke='\" & CouleurBordure & \"'/>\" &\n        \"<rect x='\" & PositionBarreX & \"' y='\" & PositionBarreY & \"' width='\" & LargeurBarre & \"' height='\" & EpaisseurBarre & \"' rx='\" & (EpaisseurBarre/2) & \"' fill='\" & CouleurBarreVide & \"'/>\" &\n        \"<rect x='\" & PositionBarreX & \"' y='\" & PositionBarreY & \"' width='\" & ProgressBarre & \"' height='\" & EpaisseurBarre & \"' rx='\" & (EpaisseurBarre/2) & \"' fill='\" & CouleurProgress & \"'/>\" &\n        \"<text x='12' y='\" & (Hauteur/2 + 4) & \"' font-family='Segoe UI, sans-serif' font-size='\" & TaillePolice & \"' font-weight='600' fill='\" & CouleurTexte & \"'>\" & Texte & \"</text>\" &\n    \"</svg>\"",
-    "preview": "<svg width='140' height='32' viewBox='0 0 140 32' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <rect x='0.5' y='0.5' width='139' height='31' rx='15.5' fill='#F8F9FA' stroke='#E9ECEF'/>\n  <rect x='50' y='13' width='80' height='6' rx='3' fill='#E9ECEF'/>\n  <rect x='50' y='13' width='52' height='6' rx='3' fill='#3B82F6'/>\n  <text x='12' y='20' font-family='Segoe UI, sans-serif' font-size='14' font-weight='600' fill='#374151'>65%</text>\n</svg>",
-    "generator": null,
-    "statut": "approved"
-  },
-  {
-    "nom": "Notation Etoiles",
-    "type": "svg",
-    "categorie": "Table",
-    "sous_categorie": "Note",
-    "description": "Notation visuelle sur 5 étoiles (120×24 px) avec demi-étoile pour les valeurs intermédiaires. Étoiles pleines en jaune doré, vides en gris clair.",
-    "code": "Notation Etoiles =\n// ===== RÉCUPÉRATION DES VALEURS =====\nVAR Note = MAX(D_Formateur[Note 5])\nVAR NoteEntiere = INT(Note)\nVAR NoteDemi = IF(Note - NoteEntiere >= 0.5, 1, 0)\nVAR NoteVide = 5 - NoteEntiere - NoteDemi\n\n// ===== DIMENSIONS =====\nVAR Largeur = 120\nVAR Hauteur = 24\nVAR TailleEtoile = 16\nVAR Espacement = 4\n\n// ===== COULEURS =====\nVAR CouleurPleine = \"#FBBF24\"\nVAR CouleurVide = \"#E5E7EB\"\n\n// ===== GÉNÉRATION DES ÉTOILES =====\nVAR EtoilePath = \"M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z\"\nVAR OffsetY = (Hauteur - TailleEtoile) / 2\n\nVAR EtoilesPleine =\n    IF(NoteEntiere >= 1, \"<g transform='translate(0,\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurPleine & \"'/></svg></g>\", \"\") &\n    IF(NoteEntiere >= 2, \"<g transform='translate(\" & (TailleEtoile + Espacement) & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurPleine & \"'/></svg></g>\", \"\") &\n    IF(NoteEntiere >= 3, \"<g transform='translate(\" & (2 * (TailleEtoile + Espacement)) & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurPleine & \"'/></svg></g>\", \"\") &\n    IF(NoteEntiere >= 4, \"<g transform='translate(\" & (3 * (TailleEtoile + Espacement)) & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurPleine & \"'/></svg></g>\", \"\") &\n    IF(NoteEntiere >= 5, \"<g transform='translate(\" & (4 * (TailleEtoile + Espacement)) & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurPleine & \"'/></svg></g>\", \"\")\n\nVAR EtoileDemi =\n    IF(NoteDemi = 1,\n        \"<g transform='translate(\" & (NoteEntiere * (TailleEtoile + Espacement)) & \",\" & OffsetY & \")'>\" &\n            \"<svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'>\" &\n                \"<defs><clipPath id='half'><rect x='0' y='0' width='12' height='24'/></clipPath></defs>\" &\n                \"<path d='\" & EtoilePath & \"' fill='\" & CouleurVide & \"'/>\" &\n                \"<path d='\" & EtoilePath & \"' fill='\" & CouleurPleine & \"' clip-path='url(%23half)'/>\" &\n            \"</svg>\" &\n        \"</g>\",\n    \"\")\n\nVAR PosVide1 = (NoteEntiere + NoteDemi) * (TailleEtoile + Espacement)\nVAR PosVide2 = (NoteEntiere + NoteDemi + 1) * (TailleEtoile + Espacement)\nVAR PosVide3 = (NoteEntiere + NoteDemi + 2) * (TailleEtoile + Espacement)\nVAR PosVide4 = (NoteEntiere + NoteDemi + 3) * (TailleEtoile + Espacement)\n\nVAR EtoilesVide =\n    IF(NoteVide >= 1, \"<g transform='translate(\" & PosVide1 & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurVide & \"'/></svg></g>\", \"\") &\n    IF(NoteVide >= 2, \"<g transform='translate(\" & PosVide2 & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurVide & \"'/></svg></g>\", \"\") &\n    IF(NoteVide >= 3, \"<g transform='translate(\" & PosVide3 & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurVide & \"'/></svg></g>\", \"\") &\n    IF(NoteVide >= 4, \"<g transform='translate(\" & PosVide4 & \",\" & OffsetY & \")'><svg width='\" & TailleEtoile & \"' height='\" & TailleEtoile & \"' viewBox='0 0 24 24'><path d='\" & EtoilePath & \"' fill='\" & CouleurVide & \"'/></svg></g>\", \"\")\n\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='\" & Largeur & \"' height='\" & Hauteur & \"' viewBox='0 0 \" & Largeur & \" \" & Hauteur & \"' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        EtoilesPleine & EtoileDemi & EtoilesVide &\n    \"</svg>\"",
-    "preview": "<svg width='120' height='24' viewBox='0 0 120 24' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <g transform='translate(0,4)'><svg width='16' height='16' viewBox='0 0 24 24'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' fill='#FBBF24'/></svg></g>\n  <g transform='translate(20,4)'><svg width='16' height='16' viewBox='0 0 24 24'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' fill='#FBBF24'/></svg></g>\n  <g transform='translate(40,4)'><svg width='16' height='16' viewBox='0 0 24 24'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' fill='#FBBF24'/></svg></g>\n  <g transform='translate(60,4)'><svg width='16' height='16' viewBox='0 0 24 24'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' fill='#FBBF24'/></svg></g>\n  <g transform='translate(80,4)'>\n    <svg width='16' height='16' viewBox='0 0 24 24'>\n      <defs><clipPath id='notation-half'><rect x='0' y='0' width='12' height='24'/></clipPath></defs>\n      <path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' fill='#E5E7EB'/>\n      <path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' fill='#FBBF24' clip-path='url(#notation-half)'/>\n    </svg>\n  </g>\n</svg>",
-    "generator": null,
-    "statut": "approved"
-  },
-  {
-    "nom": "Jauge Pixel Table",
-    "type": "svg",
-    "categorie": "Table",
-    "sous_categorie": "Jauge",
-    "description": "Jauge style pixel-art (106×25 px) avec contour gris à coins crantés et barre bicolore (haut + bas légèrement ombré). Les couleurs changent par paliers : rouge < 25 %, jaune < 70 %, vert au-delà.",
-    "code": "Jauge Pixel Table =\nVAR Prod = MAX(D_Formateur[%R&D])\nVAR MaxWidthSvg = 98.8901\nVAR WidthJauge = INT(Prod * MaxWidthSvg)\nVAR Couleur_Contour = \"%23D9D9D9\"\nVAR Couleur_Haut = SWITCH(TRUE(), WidthJauge < 25, \"%23E02A29\", WidthJauge < 70, \"%23E6CD11\", \"%2341E027\")\nVAR Couleur_Bas = SWITCH(TRUE(), WidthJauge < 25, \"%23C72121\", WidthJauge < 70, \"%23CD9E0A\", \"%231EAD07\")\nRETURN\n\"data:image/svg+xml;utf8, <svg width='106' height='25' viewBox='0 0 106 25' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3.41003' y='4.19968' width='\" & WidthJauge & \"' height='8.52499' fill='\" & Couleur_Haut & \"'/><rect x='3.41003' y='12.7246' width='\" & WidthJauge & \"' height='8.52499' fill='\" & Couleur_Bas & \"'/><rect x='6.82002' y='0.789948' width='92.07' height='3.41' fill='\" & Couleur_Contour & \"'/><rect x='6.82002' y='21.25' width='92.07' height='3.41' fill='\" & Couleur_Contour & \"'/><rect x='3.41003' y='4.19968' width='3.41' height='3.41' fill='\" & Couleur_Contour & \"'/><rect x='98.89' y='4.19968' width='3.41' height='3.41' fill='\" & Couleur_Contour & \"'/><rect x='98.89' y='17.84' width='3.41' height='3.41' fill='\" & Couleur_Contour & \"'/><rect y='7.60983' width='3.41' height='10.23' fill='\" & Couleur_Contour & \"'/><rect x='102.3' y='7.60983' width='3.41' height='10.23' fill='\" & Couleur_Contour & \"'/><rect x='3.41003' y='17.84' width='3.41' height='3.41' fill='\" & Couleur_Contour & \"'/></svg>\"",
-    "preview": "<svg width='106' height='25' viewBox='0 0 106 25' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <rect x='3.41003' y='4.19968' width='59' height='8.52499' fill='#E6CD11'/>\n  <rect x='3.41003' y='12.7246' width='59' height='8.52499' fill='#CD9E0A'/>\n  <rect x='6.82002' y='0.789948' width='92.07' height='3.41' fill='#D9D9D9'/>\n  <rect x='6.82002' y='21.25' width='92.07' height='3.41' fill='#D9D9D9'/>\n  <rect x='3.41003' y='4.19968' width='3.41' height='3.41' fill='#D9D9D9'/>\n  <rect x='98.89' y='4.19968' width='3.41' height='3.41' fill='#D9D9D9'/>\n  <rect x='98.89' y='17.84' width='3.41' height='3.41' fill='#D9D9D9'/>\n  <rect y='7.60983' width='3.41' height='10.23' fill='#D9D9D9'/>\n  <rect x='102.3' y='7.60983' width='3.41' height='10.23' fill='#D9D9D9'/>\n  <rect x='3.41003' y='17.84' width='3.41' height='3.41' fill='#D9D9D9'/>\n</svg>",
-    "generator": null,
-    "statut": "approved"
-  },
-  {
-    "nom": "Jauge Bullet",
-    "type": "svg",
-    "categorie": "Table",
-    "sous_categorie": "Jauge",
-    "description": "Bullet chart compact (227×22 px) — barre de performance + ligne de référence noire à 80 %. La couleur de la barre passe de rouge à vert selon la distance à la cible.",
-    "code": "Jauge Bullet =\n// ===== BULLET CHART : valeur réelle + ligne de référence =====\nVAR Valeur = MIN(1, MAX(0, MAX(D_Formateur[%R&D])))\nVAR Cible = 0.8\n\n// ===== DIMENSIONS =====\nVAR Largeur = 227\nVAR Hauteur = 22\nVAR HauteurBarre = 10\nVAR OffsetY = (Hauteur - HauteurBarre) / 2\n\n// ===== CALCULS =====\nVAR WidthActuel = INT(Largeur * Valeur)\nVAR XCible = INT(Largeur * Cible)\n\n// ===== COULEURS =====\nVAR CouleurFond = \"#F3F4F6\"\nVAR CouleurBarre =\n    IF(Valeur >= Cible,             \"#10B981\",\n    IF(Valeur >= Cible * 0.75,      \"#3B82F6\",\n    IF(Valeur >= Cible * 0.5,       \"#F59E0B\", \"#EF4444\")))\n\n// ===== GÉNÉRATION DU SVG =====\nRETURN\n    \"data:image/svg+xml;utf8, \" &\n    \"<svg width='\" & Largeur & \"' height='\" & Hauteur & \"' viewBox='0 0 \" & Largeur & \" \" & Hauteur & \"' fill='none' xmlns='http://www.w3.org/2000/svg'>\" &\n        \"<rect x='0' y='\" & OffsetY & \"' width='\" & Largeur & \"' height='\" & HauteurBarre & \"' rx='2' fill='\" & CouleurFond & \"'/>\" &\n        \"<rect x='0' y='\" & OffsetY & \"' width='\" & WidthActuel & \"' height='\" & HauteurBarre & \"' rx='2' fill='\" & CouleurBarre & \"'/>\" &\n        \"<rect x='\" & (XCible - 1) & \"' y='1' width='2' height='\" & (Hauteur - 2) & \"' rx='1' fill='#1F2937'/>\" &\n    \"</svg>\"",
-    "preview": "<svg width='227' height='22' viewBox='0 0 227 22' fill='none' xmlns='http://www.w3.org/2000/svg'>\n  <rect x='0' y='6' width='227' height='10' rx='2' fill='#F3F4F6'/>\n  <rect x='0' y='6' width='158' height='10' rx='2' fill='#3B82F6'/>\n  <rect x='180' y='1' width='2' height='20' rx='1' fill='#1F2937'/>\n</svg>",
-    "generator": null,
     "statut": "approved"
   }
 ]
